@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AeroLay Flight Dashboard</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:22px;font-family:Arial,sans-serif;background:#071426;color:white}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+h1,h2{color:#55c7ff}
+.card{background:#10243d;border:1px solid #294362;border-radius:12px;padding:20px;margin:20px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
+.stat{background:#193653;padding:18px;border-radius:10px}
+.stat strong{display:block;font-size:28px;color:#55c7ff;margin-top:8px}
+button,input{padding:11px;margin:5px;border:0;border-radius:7px;font-size:14px}
+button{background:#168bd2;color:white;cursor:pointer}
+button:hover{background:#0871b3}
+input{max-width:100%;background:#f2f6fb;color:#17283d}
+.table-wrap{overflow-x:auto}
+table{width:100%;min-width:650px;border-collapse:collapse;margin-top:15px}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #294362}
+th{color:#55c7ff}
+tbody tr{cursor:pointer}
+tbody tr:hover,tbody tr.selected{background:#234568}
+.Scheduled{color:#60e6a0}
+.Delayed{color:#ffca65}
+.Cancelled{color:#ff7b83}
+.result{color:#a8e8ff;line-height:1.7}
+footer{text-align:center;color:#93a8c1;padding:20px}
+</style>
+</head>
+<body>
+
+<header>
+<div>
+<h1>✈ AeroLay</h1>
+<p>Your Destination, Our Responsibility.</p>
+</div>
+<button onclick="goHome()">Back to Home</button>
+</header>
+
+<section class="stats">
+<div class="stat">Total Flights<strong id="total">0</strong></div>
+<div class="stat">Scheduled Flights<strong id="scheduled">0</strong></div>
+<div class="stat">Delayed Flights<strong id="delayed">0</strong></div>
+<div class="stat">Cancelled Flights<strong id="cancelled">0</strong></div>
+</section>
+
+<section class="card">
+<h2>Flight Information</h2>
+<input id="search" placeholder="Search flight number, airline or city">
+<button onclick="searchFlights()">Search Flight</button>
+<button onclick="showAllFlights()">Show All Flights</button>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Flight Number</th><th>Airline</th><th>Status</th>
+<th>Departure</th><th>Destination</th><th>Estimated Arrival</th>
+</tr></thead>
+<tbody id="flightTable"></tbody>
+</table>
+</div>
+<p>Click a flight row to select it.</p>
+<p id="message" class="result"></p>
+</section>
+
+<section class="card">
+<h2>Pickup Assistant</h2>
+<p>Enter your travel and preparation times.</p>
+<label>Travel time to airport (minutes):</label>
+<input id="travel" type="number" min="0" value="45">
+<label>Preparation time (minutes):</label>
+<input id="prep" type="number" min="0" value="30">
+<button onclick="calculatePickup()">Calculate Pickup Time</button>
+<p id="pickupResult" class="result"></p>
+</section>
+
+<section class="card">
+<h2>Weather Information</h2>
+<button onclick="showWeather()">Show Weather</button>
+<p id="weatherResult" class="result"></p>
+</section>
+
+<section class="card">
+<h2>Flight Alerts</h2>
+<button onclick="checkAlerts()">Check Alerts</button>
+<div id="alertResult" class="result"></div>
+</section>
+
+<section class="card">
+<h2>Airport Navigation</h2>
+<p>View the destination airport on Google Maps.</p>
+<button onclick="openNavigation()">Open Airport Navigation</button>
+</section>
+
+<section class="card">
+<h2>Offline Flight Data</h2>
+<button onclick="saveOffline()">Save Offline</button>
+<button onclick="document.getElementById('offlineFile').click()">Load Offline</button>
+<input id="offlineFile" type="file" accept=".json,application/json" hidden>
+<p id="offlineMessage" class="result"></p>
+</section>
+
+<footer>AeroLay | Smart Flight Tracking | Seamless Journeys</footer>
+
+<script>
+let flights=[
+{number:"AI101",airline:"Air India",status:"Scheduled",departure:"Hyderabad",destination:"Delhi",arrival:"10:30"},
+{number:"6E202",airline:"IndiGo",status:"Delayed",departure:"Chennai",destination:"Mumbai",arrival:"12:15"},
+{number:"UK303",airline:"Vistara (Sample)",status:"Cancelled",departure:"Delhi",destination:"Bengaluru",arrival:"14:00"},
+{number:"AI404",airline:"Air India",status:"Scheduled",departure:"Mumbai",destination:"Hyderabad",arrival:"16:45"}
+];
+
+let visibleFlights=[...flights];
+let selectedFlight=null;
+
+function renderFlights(){
+const table=document.getElementById("flightTable");
+table.innerHTML="";
+visibleFlights.forEach(f=>{
+const row=document.createElement("tr");
+if(selectedFlight&&selectedFlight.number===f.number)row.classList.add("selected");
+[f.number,f.airline,f.status,f.departure,f.destination,f.arrival].forEach((v,i)=>{
+const cell=document.createElement("td");
+cell.textContent=v;
+if(i===2)cell.className=f.status;
+row.appendChild(cell);
+});
+row.onclick=()=>{
+selectedFlight=f;
+renderFlights();
+document.getElementById("message").textContent="Selected flight: "+f.number;
+};
+table.appendChild(row);
+});
+updateStats();
+}
+
+function updateStats(){
+document.getElementById("total").textContent=flights.length;
+document.getElementById("scheduled").textContent=flights.filter(f=>f.status==="Scheduled").length;
+document.getElementById("delayed").textContent=flights.filter(f=>f.status==="Delayed").length;
+document.getElementById("cancelled").textContent=flights.filter(f=>f.status==="Cancelled").length;
+}
+
+function searchFlights(){
+const q=document.getElementById("search").value.trim().toLowerCase();
+visibleFlights=flights.filter(f=>
+[f.number,f.airline,f.status,f.departure,f.destination]
+.some(v=>v.toLowerCase().includes(q))
+);
+renderFlights();
+document.getElementById("message").textContent=visibleFlights.length+" flight(s) found.";
+}
+
+function showAllFlights(){
+document.getElementById("search").value="";
+visibleFlights=[...flights];
+renderFlights();
+document.getElementById("message").textContent="Showing all flights.";
+}
+
+function calculatePickup(){
+if(!selectedFlight){alert("Please select a flight first.");return;}
+const t=document.getElementById("travel").value;
+const p=document.getElementById("prep").value;
+if(t===""||p===""||Number(t)<0||Number(p)<0){
+alert("Please enter valid time values.");return;
+}
+const parts=selectedFlight.arrival.split(":");
+const arrivalMinutes=Number(parts[0])*60+Number(parts[1]);
+const suggested=((arrivalMinutes-120-Number(t)-Number(p))%1440+1440)%1440;
+const h=String(Math.floor(suggested/60)).padStart(2,"0");
+const m=String(suggested%60).padStart(2,"0");
+document.getElementById("pickupResult").textContent=
+"Suggested departure from home: "+h+":"+m+
+". This is a demonstration estimate only.";
+}
+
+function showWeather(){
+document.getElementById("weatherResult").textContent=
+"Temperature: 29°C | Condition: Partly Cloudy | Wind: 12 km/h. Sample data only; not live weather.";
+}
+
+function checkAlerts(){
+const box=document.getElementById("alertResult");
+box.innerHTML="";
+const list=flights.filter(f=>f.status==="Delayed"||f.status==="Cancelled");
+if(!list.length){box.textContent="No delayed or cancelled flights.";return;}
+list.forEach(f=>{
+const p=document.createElement("p");
+p.textContent=f.number+" - "+f.airline+": "+f.status;
+box.appendChild(p);
+});
+}
+
+function openNavigation(){
+if(!selectedFlight){alert("Please select a flight first.");return;}
+const destination=encodeURIComponent(selectedFlight.destination+" Airport");
+window.open("https://www.google.com/maps/search/?api=1&query="+destination,"_blank");
+}
+
+function saveOffline(){
+const blob=new Blob([JSON.stringify(flights,null,2)],{type:"application/json"});
+const url=URL.createObjectURL(blob);
+const link=document.createElement("a");
+link.href=url;
+link.download="flight_cache.json";
+link.click();
+URL.revokeObjectURL(url);
+document.getElementById("offlineMessage").textContent="Flight data export started.";
+}
+
+document.getElementById("offlineFile").addEventListener("change",function(event){
+const file=event.target.files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=function(){
+try{
+const data=JSON.parse(reader.result);
+const valid=Array.isArray(data)&&data.every(f=>
+f.number&&f.airline&&
+["Scheduled","Delayed","Cancelled"].includes(f.status)&&
+f.departure&&f.destination&&/^\d{2}:\d{2}$/.test(f.arrival)
+);
+if(!valid)throw new Error("Invalid data");
+flights=data.map(f=>({...f}));
+visibleFlights=[...flights];
+selectedFlight=null;
+renderFlights();
+document.getElementById("offlineMessage").textContent="Offline data loaded successfully.";
+}catch(error){
+alert("Unable to load file. Please select a valid flight data JSON file.");
+}
+};
+reader.readAsText(file);
+event.target.value="";
+});
+
+function goHome(){
+window.location.href="index.html";
+}
+
+renderFlights();
+</script>
+</body>
+</html>

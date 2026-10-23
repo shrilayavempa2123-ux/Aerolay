@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroLay - Smart Flight Tracker</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #000814;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+        }
+
+        .welcome-card {
+            width: 100%;
+            max-width: 1100px;
+            min-height: 600px;
+            padding: 30px;
+            text-align: center;
+            background: #0b1835;
+            border: 2px solid #142a4b;
+            border-radius: 28px;
+            box-shadow: 0 0 35px #061b35;
+        }
+
+        .plane-box {
+            min-height: 340px;
+            background: radial-gradient(ellipse at top, #06477d, #00101f 75%);
+            border: 2px solid #102e49;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .plane {
+            font-size: 170px;
+            color: white;
+            transform: rotate(-35deg);
+        }
+
+        h1 {
+            margin-top: 25px;
+            font-size: 42px;
+        }
+
+        .tagline {
+            color: #73baff;
+            font-size: 25px;
+            font-weight: bold;
+            margin-top: 18px;
+        }
+
+        .features {
+            color: #d6e4f5;
+            font-size: 19px;
+            margin-top: 25px;
+            line-height: 1.8;
+        }
+
+        .start-button {
+            margin-top: 30px;
+            padding: 15px 38px;
+            border: none;
+            border-radius: 30px;
+            background: #168cff;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .start-button:hover {
+            background: #55adff;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 600px) {
+            .welcome-card {
+                padding: 18px;
+            }
+
+            .plane-box {
+                min-height: 250px;
+            }
+
+            .plane {
+                font-size: 110px;
+            }
+
+            h1 {
+                font-size: 34px;
+            }
+
+            .tagline {
+                font-size: 19px;
+            }
+
+            .features {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="welcome-card">
+
+        <div class="plane-box">
+            <div class="plane">&#9992;</div>
+        </div>
+
+        <h1>AeroLay</h1>
+
+        <p class="tagline">
+            Your Destination, Our Responsibility.
+        </p>
+
+        <p class="features">
+            Smart Flight Tracking · Real-Time Updates · Seamless Journeys
+        </p>
+
+        <button class="start-button" onclick="openDashboard()">
+            Get Started →
+        </button>
+
+    </main>
+
+    <script>
+        function openDashboard() {
+            window.location.href = "dashboard.html";
+        }
+    </script>
+</body>
+</html>
