@@ -1,329 +1,981 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AeroLay Flight Dashboard</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AeroLay Dashboard</title>
+<meta name="description" content="AeroLay flight dashboard with sample flight data and live airport weather when available.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23071a3d'/%3E%3Cpath d='M5 18l22-9-7 15-4-6-5 3z' fill='%2322d3ee'/%3E%3C/svg%3E">
 <style>
-*{box-sizing:border-box}
-body{margin:0;padding:22px;font-family:Arial,sans-serif;background:#071426;color:white}
-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-h1,h2{color:#55c7ff}
-.card{background:#10243d;border:1px solid #294362;border-radius:12px;padding:20px;margin:20px 0}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
-.stat{background:#193653;padding:18px;border-radius:10px}
-.stat strong{display:block;font-size:28px;color:#55c7ff;margin-top:8px}
-button,input{padding:11px;margin:5px;border:0;border-radius:7px;font-size:14px}
-button{background:#168bd2;color:white;cursor:pointer}
-button:hover{background:#0871b3}
-input{max-width:100%;background:#f2f6fb;color:#17283d}
-.table-wrap{overflow-x:auto}
-table{width:100%;min-width:650px;border-collapse:collapse;margin-top:15px}
-th,td{padding:12px;text-align:left;border-bottom:1px solid #294362}
-th{color:#55c7ff}
-tbody tr{cursor:pointer}
-tbody tr:hover,tbody tr.selected{background:#234568}
-.Scheduled{color:#60e6a0}
-.Delayed{color:#ffca65}
-.Cancelled{color:#ff7b83}
-.result{color:#a8e8ff;line-height:1.7}
-footer{text-align:center;color:#93a8c1;padding:20px}
-{
-/* AeroLay dashboard visual upgrade */
-body {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 28px;
-  background:
-    radial-gradient(ellipse at top, #12345a 0%, #071426 55%);
-  line-height: 1.6;
+:root {
+  --bg:#06122b;
+  --bg2:#0a1a3a;
+  --panel:#0d1f44;
+  --panel2:#12285a;
+  --line:#1d3567;
+  --text:#e8f0ff;
+  --muted:#93a9d3;
+  --cyan:#22d3ee;
+  --ok:#4ade80;
+  --warn:#fbbf24;
+  --bad:#fb7185;
+  --radius:14px;
+  --font:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
 }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  margin:0;
+  min-height:100vh;
+  font-family:var(--font);
+  line-height:1.5;
+  color:var(--text);
+  background:radial-gradient(1200px 600px at 80% -10%,#0f2a63 0%,transparent 60%),var(--bg);
+}
+button,input,select { font:inherit; }
+button { color:inherit; }
+a { color:var(--cyan); }
+:focus-visible { outline:3px solid var(--cyan); outline-offset:3px; }
+[hidden] { display:none!important; }
+.sr {
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+.skip {
+  position:absolute;top:-60px;left:8px;z-index:100;
+  padding:8px 14px;background:var(--cyan);color:#012;border-radius:8px;
+}
+.skip:focus { top:8px; }
 
 header {
-  gap: 18px;
-  padding: 20px 0 28px;
-  border-bottom: 1px solid #294362;
+  position:sticky;top:0;z-index:20;
+  background:rgba(6,18,43,.94);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(12px);
 }
-
-header h1 {
-  font-size: clamp(30px, 5vw, 44px);
-  letter-spacing: 1px;
-  margin-bottom: 6px;
+.bar {
+  max-width:1280px;margin:auto;padding:12px 20px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
 }
-
-header p {
-  color: #a8dfff;
-  margin-top: 0;
+.brand {
+  display:flex;align-items:center;gap:10px;
+  color:var(--text);text-decoration:none;
+  font-size:1.4rem;font-weight:800;
 }
-
-button {
-  transition: background 0.2s ease, transform 0.2s ease;
+.brand svg { width:34px;height:34px; }
+.brand b { color:var(--cyan); }
+nav { display:flex;gap:6px;margin-left:auto;flex-wrap:wrap; }
+.nav-btn {
+  min-height:44px;padding:9px 14px;border-radius:999px;
+  background:transparent;border:1px solid transparent;
+  color:var(--muted);font-weight:600;cursor:pointer;
 }
-
-button:hover {
-  transform: translateY(-2px);
+.nav-btn:hover { color:var(--text);background:var(--panel); }
+.nav-btn[aria-current="page"] {
+  background:var(--panel2);color:var(--cyan);border-color:var(--cyan);
 }
-
-.stat {
-  border: 1px solid #315578;
-  background: linear-gradient(145deg, #193653, #10243d);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+.badge {
+  display:inline-grid;place-items:center;min-width:20px;height:20px;
+  padding:0 6px;margin-left:4px;border-radius:12px;
+  background:var(--bad);color:#26050d;font-size:.75rem;font-weight:800;
 }
-
-.stat:hover {
-  transform: translateY(-3px);
-  border-color: #55c7ff;
+.demo-strip {
+  padding:8px 16px;text-align:center;
+  background:linear-gradient(90deg,#0b2a5e,#0c3a6b);
+  border-top:1px solid var(--line);font-size:.9rem;color:#cfeeff;
 }
+.demo-strip strong { color:var(--cyan); }
 
+main { max-width:1280px;margin:auto;padding:24px 20px 56px; }
+h1 { margin:0 0 6px;font-size:clamp(1.6rem,3.5vw,2.3rem);line-height:1.2; }
+h2 { margin:0 0 12px;font-size:1.15rem; }
+.sub { color:var(--muted);margin:0 0 22px;max-width:70ch; }
 .card {
-  border-radius: 16px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+  padding:18px;border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(180deg,var(--panel),var(--bg2));
 }
-
-input:focus {
-  outline: 2px solid #55c7ff;
-  outline-offset: 2px;
+.stats {
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;margin-bottom:20px;
 }
-
-button:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 3px;
+.stat {
+  padding:16px 18px;text-align:left;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--radius);
+  background:linear-gradient(180deg,var(--panel),var(--bg2));
 }
+.stat:hover { border-color:var(--cyan); }
+.stat[aria-pressed="true"] { border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan); }
+.stat .n { display:block;font-size:2rem;font-weight:800;line-height:1.2; }
+.stat .l { color:var(--muted);font-size:.92rem; }
+.stat.all .n { color:var(--cyan); }
+.stat.ok .n { color:var(--ok); }
+.stat.warn .n { color:var(--warn); }
+.stat.bad .n { color:var(--bad); }
 
-@media (max-width: 600px) {
-  body {
-    padding: 14px;
-  }
+.tools { display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,230px) auto;gap:12px;margin-bottom:12px; }
+.field { position:relative; }
+.field input,.field select,.pf input,.pf select {
+  width:100%;min-height:46px;padding:11px 14px;
+  background:var(--bg);color:var(--text);
+  border:1px solid var(--line);border-radius:12px;
+}
+.field input { padding-left:42px; }
+.field svg {
+  position:absolute;left:13px;top:50%;
+  transform:translateY(-50%);width:18px;height:18px;color:var(--muted);
+}
+.chips { display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
+.chip,.btn {
+  min-height:40px;padding:8px 15px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);
+  cursor:pointer;font-weight:600;
+}
+.chip:hover,.btn:hover { border-color:var(--cyan); }
+.chip[aria-pressed="true"] { background:var(--cyan);color:#022;border-color:var(--cyan); }
+.btn.primary { background:var(--cyan);color:#022;border-color:var(--cyan); }
+.btn.primary:hover { background:#67e8f9; }
+.btn:disabled { opacity:.55;cursor:not-allowed; }
+.count { margin-left:auto;color:var(--muted);font-size:.9rem; }
 
-  .card {
-    padding: 14px;
-    margin: 16px 0;
-  }
+.layout { display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:18px;align-items:start; }
+.twrap { padding:0;overflow:hidden; }
+table { width:100%;border-collapse:collapse; }
+caption { text-align:left; }
+th,td { padding:13px 12px;text-align:left;border-bottom:1px solid var(--line); }
+th { color:var(--muted);font-size:.85rem;background:rgba(18,40,90,.5); }
+th button { border:0;background:transparent;color:var(--cyan);cursor:pointer;font-weight:700; }
+tbody tr { cursor:pointer; }
+tbody tr:hover { background:rgba(34,211,238,.06); }
+tbody tr[aria-selected="true"] { background:rgba(34,211,238,.13);box-shadow:inset 3px 0 0 var(--cyan); }
+td.fn { color:var(--cyan);font-weight:700; }
+.code { font-weight:700; }
+.city { display:block;color:var(--muted);font-size:.85rem; }
+.pill {
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px;border:1px solid;border-radius:999px;
+  font-size:.82rem;font-weight:700;white-space:nowrap;
+}
+.pill::before { content:"";width:7px;height:7px;border-radius:50%;background:currentColor; }
+.pill.ok { color:var(--ok);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.08); }
+.pill.warn { color:var(--warn);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08); }
+.pill.bad { color:var(--bad);border-color:rgba(251,113,133,.4);background:rgba(251,113,133,.08); }
+.empty { padding:35px 20px;text-align:center;color:var(--muted); }
+.details { position:sticky;top:145px; }
+.route { display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 4px; }
+.route .big { font-size:1.8rem;font-weight:800; }
+.route .line { flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--cyan) 0 8px,transparent 8px 14px); }
+.dl { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0; }
+.dl div { min-width:0;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;overflow-wrap:anywhere; }
+.dl dt { color:var(--muted);font-size:.8rem; }
+.dl dd { margin:0;font-weight:700; }
+.actions { display:flex;gap:10px;flex-wrap:wrap; }
+.small-note { color:var(--muted);font-size:.84rem;margin:12px 0 0; }
+.fade { animation:fadein .2s ease; }
+@keyframes fadein { from { opacity:.3;transform:translateY(4px); } to { opacity:1;transform:none; } }
 
-  header {
-    align-items: flex-start;
-  }
+.pgrid { display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start; }
+.pf { display:grid;gap:14px; }
+.pf label { display:grid;gap:6px;font-weight:600; }
+.pf small { color:var(--muted);font-weight:400; }
+.result { padding:16px;border:1px solid var(--cyan);border-radius:12px;background:rgba(34,211,238,.07); }
+.result.bad { border-color:var(--bad);background:rgba(251,113,133,.08); }
+.result .t { color:var(--cyan);font-size:2.1rem;font-weight:800; }
+.result.bad .t { color:var(--bad); }
+.check { display:grid;gap:8px;margin:14px 0;padding:0;list-style:none; }
+.check label { display:flex;gap:10px;align-items:center;min-height:36px;cursor:pointer; }
+.check input { width:20px;height:20px;accent-color:var(--cyan); }
 
-  header button {
-    margin-left: 0;
-  }
+.notes { display:grid;gap:10px;margin:0;padding:0;list-style:none; }
+.note { display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2); }
+.note.unread { border-color:var(--cyan);background:var(--panel); }
+.note .ic { display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;font-weight:800; }
+.ic.warn { color:var(--warn);background:rgba(251,191,36,.15); }
+.ic.bad { color:var(--bad);background:rgba(251,113,133,.15); }
+.ic.info { color:var(--cyan);background:rgba(34,211,238,.15); }
+.note p { flex:1;margin:0;overflow-wrap:anywhere; }
+.note small { color:var(--muted); }
+.wgrid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px; }
+.wcard .temp { margin:8px 0 2px;color:var(--cyan);font-size:2.2rem;font-weight:800;line-height:1.2; }
+.wcard .tag { display:inline-block;margin-top:10px;padding:3px 9px;border-radius:8px;font-size:.8rem;font-weight:700; }
+.tag.live { color:var(--ok);background:rgba(74,222,128,.12); }
+.tag.offline { color:var(--warn);background:rgba(251,191,36,.12); }
+.steps { display:grid;gap:10px;padding-left:22px;margin:8px 0 16px; }
+.plain { display:grid;gap:8px;margin:8px 0;padding:0;list-style:none; }
+.plain li { padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:10px; }
+.row { display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px; }
+
+footer {
+  max-width:1280px;margin:auto;padding:0 20px 36px;
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  color:var(--muted);font-size:.9rem;
+}
+.toast {
+  position:fixed;left:50%;bottom:24px;z-index:60;
+  max-width:90vw;padding:12px 20px;border:1px solid var(--cyan);
+  border-radius:12px;background:var(--panel2);
+  opacity:0;pointer-events:none;transform:translate(-50%,20px);transition:.2s;
+}
+.toast.show { opacity:1;transform:translate(-50%,0); }
+
+@media(max-width:1023px) {
+  .layout { grid-template-columns:1fr; }
+  .details { position:static; }
+  .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:760px) {
+  .tools,.pgrid { grid-template-columns:1fr; }
+  nav { width:100%;margin:0; }
+  .nav-btn { flex:1;padding:8px 6px; }
+  thead { position:absolute;left:-9999px; }
+  table,tbody,tr,td { display:block;width:100%; }
+  tbody tr { padding:12px 14px;border-bottom:1px solid var(--line); }
+  td { display:flex;justify-content:space-between;gap:12px;padding:5px 0;border:0;text-align:right; }
+  td::before { content:attr(data-label);color:var(--muted);font-size:.85rem;text-align:left; }
+  td .city { display:inline;margin-left:6px; }
+  .note { flex-wrap:wrap; }
+}
+@media(max-width:420px) {
+  main { padding:20px 12px 40px; }
+  .bar { padding:10px 12px; }
+  .stats { gap:8px; }
+  .stat { padding:12px; }
+  .stat .n { font-size:1.7rem; }
+  .dl { gap:7px; }
+  .dl div { padding:8px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { animation:none!important;transition:none!important;scroll-behavior:auto!important; }
 }
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <header>
-<div>
-<h1>✈ AeroLay</h1>
-<p>Your Destination, Our Responsibility.</p>
-</div>
-<button onclick="goHome()">Back to Home</button>
+  <div class="bar">
+    <a class="brand" href="index.html" aria-label="AeroLay home">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#0d1f44" stroke="#22d3ee"/>
+        <path d="M5 18l22-9-7 15-4-6-5 3z" fill="#22d3ee"/>
+      </svg>
+      <span>Aero<b>Lay</b></span>
+    </a>
+    <nav aria-label="Dashboard sections">
+      <button class="nav-btn" data-view="flights" aria-current="page">Flights</button>
+      <button class="nav-btn" data-view="pickup">Pickup assistant</button>
+      <button class="nav-btn" data-view="weather">Weather</button>
+      <button class="nav-btn" data-view="airport">Airport guide</button>
+      <button class="nav-btn" data-view="alerts">Notifications <span class="badge" id="badge" hidden>0</span></button>
+    </nav>
+  </div>
+  <div class="demo-strip" role="note">
+    <strong>Demo flight data:</strong> flight statuses, times, gates and terminals are examples, not live information. Weather is live only when explicitly labelled Live.
+  </div>
 </header>
 
-<section class="stats">
-<div class="stat">Total Flights<strong id="total">0</strong></div>
-<div class="stat">Scheduled Flights<strong id="scheduled">0</strong></div>
-<div class="stat">Delayed Flights<strong id="delayed">0</strong></div>
-<div class="stat">Cancelled Flights<strong id="cancelled">0</strong></div>
+<main id="main" tabindex="-1">
+<section id="view-flights" aria-labelledby="h-flights">
+  <h1 id="h-flights">Flight dashboard</h1>
+  <p class="sub" id="dateline">Sample flight schedule. Not live airline data.</p>
+
+  <div class="stats" role="group" aria-label="Filter by flight status">
+    <button class="stat all" data-status="all" aria-pressed="true"><span class="n" id="s-all">0</span><span class="l">Total flights</span></button>
+    <button class="stat ok" data-status="ontime" aria-pressed="false"><span class="n" id="s-ontime">0</span><span class="l">On time</span></button>
+    <button class="stat warn" data-status="delayed" aria-pressed="false"><span class="n" id="s-delayed">0</span><span class="l">Delayed</span></button>
+    <button class="stat bad" data-status="cancelled" aria-pressed="false"><span class="n" id="s-cancelled">0</span><span class="l">Cancelled</span></button>
+  </div>
+
+  <div class="tools">
+    <div class="field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <label class="sr" for="q">Search flights</label>
+      <input id="q" type="search" placeholder="Search flight, airline, city or airport" autocomplete="off">
+    </div>
+    <div class="field">
+      <label class="sr" for="airline">Filter by airline</label>
+      <select id="airline"><option value="all">All airlines</option></select>
+    </div>
+    <button class="btn" id="reset">Reset filters</button>
+  </div>
+
+  <div class="chips" role="group" aria-label="Flight status filter">
+    <button class="chip" data-status="all" aria-pressed="true">All</button>
+    <button class="chip" data-status="ontime" aria-pressed="false">On time</button>
+    <button class="chip" data-status="delayed" aria-pressed="false">Delayed</button>
+    <button class="chip" data-status="cancelled" aria-pressed="false">Cancelled</button>
+    <span class="count" id="count" aria-live="polite"></span>
+  </div>
+
+  <div class="layout">
+    <div class="card twrap">
+      <table>
+        <caption class="sr">Sample flight list. Select a row to view details.</caption>
+        <thead><tr>
+          <th scope="col">Flight</th>
+          <th scope="col">Airline</th>
+          <th scope="col">Origin</th>
+          <th scope="col">Destination</th>
+          <th scope="col"><button id="sort" aria-label="Sort by departure time ascending">Departure ▲</button></th>
+          <th scope="col">Status</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty" hidden>
+        <p><strong>No flights match.</strong></p>
+        <p>Try a different search or reset the filters.</p>
+      </div>
+    </div>
+    <aside class="card details" id="details" aria-labelledby="h-details" aria-live="polite"></aside>
+  </div>
 </section>
 
-<section class="card">
-<h2>Flight Information</h2>
-<input id="search" placeholder="Search flight number, airline or city">
-<button onclick="searchFlights()">Search Flight</button>
-<button onclick="showAllFlights()">Show All Flights</button>
-<div class="table-wrap">
-<table>
-<thead><tr>
-<th>Flight Number</th><th>Airline</th><th>Status</th>
-<th>Departure</th><th>Destination</th><th>Estimated Arrival</th>
-</tr></thead>
-<tbody id="flightTable"></tbody>
-</table>
-</div>
-<p>Click a flight row to select it.</p>
-<p id="message" class="result"></p>
+<section id="view-pickup" hidden aria-labelledby="h-pickup">
+  <h1 id="h-pickup">Passenger pickup assistant</h1>
+  <p class="sub">Estimate when to leave based on the sample flight schedule. Confirm actual arrival information before travelling.</p>
+  <div class="pgrid">
+    <div class="card pf">
+      <h2>Trip details</h2>
+      <label for="p-flight">Arriving flight
+        <select id="p-flight"></select>
+      </label>
+      <label for="p-travel">Your travel time to the airport (minutes)
+        <input id="p-travel" type="number" min="5" max="300" value="30">
+      </label>
+      <label for="p-buffer">Passenger exit and baggage time (minutes)
+        <small>Allow time for leaving the plane, immigration if applicable, and baggage.</small>
+        <input id="p-buffer" type="number" min="0" max="180" value="35">
+      </label>
+    </div>
+    <div class="card">
+      <h2>Your pickup plan</h2>
+      <div class="result" id="p-result" aria-live="polite"></div>
+      <ul class="check">
+        <li><label><input type="checkbox"> Confirm the actual flight status before leaving</label></li>
+        <li><label><input type="checkbox"> Share your car details with the passenger</label></li>
+        <li><label><input type="checkbox"> Agree on a meeting point</label></li>
+        <li><label><input type="checkbox"> Check airport parking and pickup rules</label></li>
+      </ul>
+      <button class="btn primary" id="p-copy">Copy passenger message</button>
+    </div>
+  </div>
 </section>
 
-<section class="card">
-<h2>Pickup Assistant</h2>
-<p>Enter your travel and preparation times.</p>
-<label>Travel time to airport (minutes):</label>
-<input id="travel" type="number" min="0" value="45">
-<label>Preparation time (minutes):</label>
-<input id="prep" type="number" min="0" value="30">
-<button onclick="calculatePickup()">Calculate Pickup Time</button>
-<p id="pickupResult" class="result"></p>
+<section id="view-weather" hidden aria-labelledby="h-weather">
+  <h1 id="h-weather">Airport weather</h1>
+  <p class="sub" id="w-status" aria-live="polite">Weather has not loaded yet.</p>
+  <div class="row"><button class="btn primary" id="w-refresh">Refresh weather</button></div>
+  <div class="wgrid" id="w-grid"></div>
 </section>
 
-<section class="card">
-<h2>Weather Information</h2>
-<button onclick="showWeather()">Show Weather</button>
-<p id="weatherResult" class="result"></p>
+<section id="view-airport" hidden aria-labelledby="h-airport">
+  <h1 id="h-airport">Airport navigation guide</h1>
+  <p class="sub">General airport guidance. Sample gates and terminals are not verified airport information; always follow airport signs and screens.</p>
+  <div class="field" style="max-width:460px;margin-bottom:16px">
+    <label class="sr" for="a-sel">Choose an airport</label>
+    <select id="a-sel"></select>
+  </div>
+  <div class="pgrid">
+    <div class="card" id="a-flights"></div>
+    <div class="card" id="a-steps"></div>
+  </div>
 </section>
 
-<section class="card">
-<h2>Flight Alerts</h2>
-<button onclick="checkAlerts()">Check Alerts</button>
-<div id="alertResult" class="result"></div>
+<section id="view-alerts" hidden aria-labelledby="h-alerts">
+  <h1 id="h-alerts">Notifications</h1>
+  <p class="sub">Demo alerts generated from the sample flight list. These are not airline notifications.</p>
+  <div class="row">
+    <span id="unread-text" aria-live="polite"></span>
+    <div class="actions">
+      <button class="btn" id="markall">Mark all as read</button>
+      <button class="btn" id="clearall">Clear all</button>
+    </div>
+  </div>
+  <ul class="notes" id="notes"></ul>
+  <div class="empty card" id="notes-empty" hidden>
+    <p><strong>No notifications.</strong></p>
+    <p>Follow a flight from the dashboard to create a demo alert.</p>
+  </div>
 </section>
+</main>
 
-<section class="card">
-<h2>Airport Navigation</h2>
-<p>View the destination airport on Google Maps.</p>
-<button onclick="openNavigation()">Open Airport Navigation</button>
-</section>
-
-<section class="card">
-<h2>Offline Flight Data</h2>
-<button onclick="saveOffline()">Save Offline</button>
-<button onclick="document.getElementById('offlineFile').click()">Load Offline</button>
-<input id="offlineFile" type="file" accept=".json,application/json" hidden>
-<p id="offlineMessage" class="result"></p>
-</section>
-
-<footer>AeroLay | Smart Flight Tracking | Seamless Journeys</footer>
+<footer>
+  <span>AeroLay · Sample flight data only. Not a live flight tracker.</span>
+  <a href="index.html">Back to AeroLay home</a>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-let flights=[
-{number:"AI101",airline:"Air India",status:"Scheduled",departure:"Hyderabad",destination:"Delhi",arrival:"10:30"},
-{number:"6E202",airline:"IndiGo",status:"Delayed",departure:"Chennai",destination:"Mumbai",arrival:"12:15"},
-{number:"UK303",airline:"Vistara (Sample)",status:"Cancelled",departure:"Delhi",destination:"Bengaluru",arrival:"14:00"},
-{number:"AI404",airline:"Air India",status:"Scheduled",departure:"Mumbai",destination:"Hyderabad",arrival:"16:45"}
-];
+(function(){
+"use strict";
 
-let visibleFlights=[...flights];
-let selectedFlight=null;
-
-function renderFlights(){
-const table=document.getElementById("flightTable");
-table.innerHTML="";
-visibleFlights.forEach(f=>{
-const row=document.createElement("tr");
-if(selectedFlight&&selectedFlight.number===f.number)row.classList.add("selected");
-[f.number,f.airline,f.status,f.departure,f.destination,f.arrival].forEach((v,i)=>{
-const cell=document.createElement("td");
-cell.textContent=v;
-if(i===2)cell.className=f.status;
-row.appendChild(cell);
+var F=[
+ ["6E 2143","IndiGo","HYD","Hyderabad","DEL","Delhi","06:15","08:35","ontime",0,"B12","T1","Airbus A320neo"],
+ ["AI 544","Air India","DEL","Delhi","BOM","Mumbai","07:00","09:10","delayed",35,"A04","T3","Airbus A321"],
+ ["QP 1405","Akasa Air","BLR","Bengaluru","HYD","Hyderabad","07:40","08:55","ontime",0,"C07","T1","Boeing 737 MAX 8"],
+ ["SG 318","SpiceJet","RJA","Rajahmundry","HYD","Hyderabad","08:10","09:05","delayed",50,"G01","T1","Boeing 737-800"],
+ ["6E 6402","IndiGo","VTZ","Visakhapatnam","BLR","Bengaluru","08:45","10:40","ontime",0,"G03","T1","Airbus A320neo"],
+ ["AI 677","Air India","MAA","Chennai","DEL","Delhi","09:20","12:10","cancelled",0,"D02","T4","Airbus A320"],
+ ["IX 1104","Air India Express","BLR","Bengaluru","COK","Kochi","09:55","11:05","ontime",0,"E15","T2","Boeing 737-800"],
+ ["6E 5216","IndiGo","RJA","Rajahmundry","BLR","Bengaluru","10:30","12:10","ontime",0,"G02","T1","ATR 72-600"],
+ ["QP 1122","Akasa Air","BOM","Mumbai","AMD","Ahmedabad","11:05","12:10","delayed",20,"F09","T2","Boeing 737 MAX 8"],
+ ["SG 8157","SpiceJet","DEL","Delhi","GOI","Goa","11:50","14:30","ontime",0,"A11","T3","Boeing 737-800"],
+ ["AI 2651","Air India","HYD","Hyderabad","VTZ","Visakhapatnam","12:25","13:35","delayed",75,"B06","T1","Airbus A320"],
+ ["6E 7345","IndiGo","CCU","Kolkata","BOM","Mumbai","13:00","15:40","cancelled",0,"H03","T2","Airbus A321neo"],
+ ["IX 2711","Air India Express","COK","Kochi","MAA","Chennai","13:45","14:50","ontime",0,"C02","T1","Boeing 737-800"],
+ ["AI 811","Air India","BOM","Mumbai","BLR","Bengaluru","14:30","16:10","ontime",0,"F04","T2","Airbus A320neo"],
+ ["QP 1708","Akasa Air","HYD","Hyderabad","BOM","Mumbai","15:15","16:35","delayed",25,"B09","T1","Boeing 737 MAX 8"],
+ ["6E 1893","IndiGo","BLR","Bengaluru","RJA","Rajahmundry","16:05","17:35","ontime",0,"D08","T1","ATR 72-600"]
+].map(function(a,i){
+  return {id:i,num:a[0],airline:a[1],oc:a[2],oct:a[3],dc:a[4],dct:a[5],dep:a[6],arr:a[7],status:a[8],delay:a[9],gate:a[10],term:a[11],craft:a[12]};
 });
-row.onclick=()=>{
-selectedFlight=f;
-renderFlights();
-document.getElementById("message").textContent="Selected flight: "+f.number;
+
+var LABEL={ontime:"On time",delayed:"Delayed",cancelled:"Cancelled"};
+var CLS={ontime:"ok",delayed:"warn",cancelled:"bad"};
+var S={q:"",status:"all",airline:"all",asc:true,sel:null,followed:{},notes:[]};
+var $=function(s){return document.querySelector(s);};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
+var W={};
+var weatherLoading=false;
+var toastTimer=null;
+var pickupText="";
+
+function mins(t){
+  var p=t.split(":");
+  return Number(p[0])*60+Number(p[1]);
+}
+function hhmm(m){
+  m=((m%1440)+1440)%1440;
+  return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function byId(id){return F[id];}
+function toast(message){
+  var el=$("#toast");
+  el.textContent=message;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove("show");},2600);
+}
+function pill(f){
+  return '<span class="pill '+CLS[f.status]+'">'+LABEL[f.status]+
+    (f.status==="delayed"?" +"+f.delay+" min":"")+'</span>';
+}
+
+/* Flight search, filtering and sorting */
+function filtered(){
+  var q=S.q.trim().toLowerCase();
+  var rows=F.filter(function(f){
+    if(S.status!=="all"&&f.status!==S.status)return false;
+    if(S.airline!=="all"&&f.airline!==S.airline)return false;
+    if(!q)return true;
+    return [f.num,f.num.replace(/\s/g,""),f.airline,f.oc,f.oct,f.dc,f.dct]
+      .join(" ").toLowerCase().indexOf(q)>-1;
+  });
+  rows.sort(function(a,b){
+    return (mins(a.dep)-mins(b.dep))*(S.asc?1:-1);
+  });
+  return rows;
+}
+function render(){
+  var rows=filtered();
+  if(S.sel!==null&&!rows.some(function(f){return f.id===S.sel;}))S.sel=null;
+
+  $("#tbody").innerHTML=rows.map(function(f){
+    return '<tr tabindex="0" data-id="'+f.id+'" aria-selected="'+(S.sel===f.id)+'">'+
+      '<td class="fn" data-label="Flight">'+esc(f.num)+'</td>'+
+      '<td data-label="Airline">'+esc(f.airline)+'</td>'+
+      '<td data-label="Origin"><span><span class="code">'+f.oc+'</span><span class="city">'+esc(f.oct)+'</span></span></td>'+
+      '<td data-label="Destination"><span><span class="code">'+f.dc+'</span><span class="city">'+esc(f.dct)+'</span></span></td>'+
+      '<td data-label="Departure">'+f.dep+'</td>'+
+      '<td data-label="Status">'+pill(f)+'</td></tr>';
+  }).join("");
+
+  $("#empty").hidden=rows.length!==0;
+  $("#count").textContent="Showing "+rows.length+" of "+F.length+" demo flights";
+  renderDetails();
+  syncButtons();
+}
+function syncButtons(){
+  $$("[data-status]").forEach(function(b){
+    b.setAttribute("aria-pressed",String(b.dataset.status===S.status));
+  });
+  $("#sort").textContent="Departure "+(S.asc?"▲":"▼");
+  $("#sort").setAttribute("aria-label","Sort by departure time "+(S.asc?"ascending":"descending"));
+}
+function renderStats(){
+  $("#s-all").textContent=F.length;
+  ["ontime","delayed","cancelled"].forEach(function(k){
+    $("#s-"+k).textContent=F.filter(function(f){return f.status===k;}).length;
+  });
+}
+function renderDetails(){
+  var panel=$("#details");
+  if(S.sel===null){
+    panel.innerHTML='<h2 id="h-details">Flight details</h2><p class="sub" style="margin:0">Select a flight to see its sample gate, terminal, aircraft and timings.</p>';
+    return;
+  }
+
+  var f=byId(S.sel);
+  var delayed=f.status==="delayed";
+  var newDep=delayed?hhmm(mins(f.dep)+f.delay):f.dep;
+  var newArr=delayed?hhmm(mins(f.arr)+f.delay):f.arr;
+  var duration=(mins(f.arr)-mins(f.dep)+1440)%1440;
+  var following=!!S.followed[f.id];
+
+  panel.innerHTML='<div class="fade">'+
+    '<h2 id="h-details">'+esc(f.num)+' · '+esc(f.airline)+'</h2>'+pill(f)+
+    '<div class="route"><div><div class="big">'+f.oc+'</div><small class="city">'+esc(f.oct)+'</small></div><div class="line" aria-hidden="true"></div><div style="text-align:right"><div class="big">'+f.dc+'</div><small class="city">'+esc(f.dct)+'</small></div></div>'+
+    '<dl class="dl">'+
+    '<div><dt>Scheduled departure</dt><dd>'+f.dep+'</dd></div>'+
+    '<div><dt>Expected departure</dt><dd>'+(f.status==="cancelled"?"Cancelled":newDep)+'</dd></div>'+
+    '<div><dt>Scheduled arrival</dt><dd>'+f.arr+'</dd></div>'+
+    '<div><dt>Expected arrival</dt><dd>'+(f.status==="cancelled"?"Cancelled":newArr)+'</dd></div>'+
+    '<div><dt>Sample gate</dt><dd>'+f.gate+'</dd></div>'+
+    '<div><dt>Sample terminal</dt><dd>'+f.term+'</dd></div>'+
+    '<div><dt>Sample aircraft</dt><dd>'+esc(f.craft)+'</dd></div>'+
+    '<div><dt>Scheduled flight time</dt><dd>'+Math.floor(duration/60)+'h '+(duration%60)+'m</dd></div>'+
+    '</dl><div class="actions">'+
+    '<button class="btn primary" id="d-follow" aria-pressed="'+following+'">'+(following?"Following flight":"Follow this flight")+'</button>'+
+    '<button class="btn" id="d-pickup">Plan pickup</button></div>'+
+    '<p class="small-note">All flight information above is sample data, not live airline information.</p></div>';
+
+  $("#d-follow").addEventListener("click",function(){
+    if(S.followed[f.id]){
+      delete S.followed[f.id];
+      toast("Stopped following "+f.num);
+    }else{
+      S.followed[f.id]=true;
+      addNote("info","You are following "+f.num+" ("+f.oc+" to "+f.dc+"). Sample status: "+LABEL[f.status]+".");
+      toast("Following "+f.num);
+    }
+    renderDetails();
+  });
+  $("#d-pickup").addEventListener("click",function(){
+    $("#p-flight").value=String(f.id);
+    view("pickup");
+    calcPickup();
+  });
+}
+function selectFlight(id){
+  S.sel=id;
+  render();
+  var row=document.querySelector('tr[data-id="'+id+'"]');
+  if(row&&window.innerWidth<1024){
+    $("#details").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+}
+
+/* Notifications */
+function addNote(type,message){
+  S.notes.unshift({id:String(Date.now())+String(Math.random()),type:type,text:message,time:"Just now",read:false});
+  renderNotes();
+}
+function seedNotes(){
+  F.forEach(function(f){
+    if(f.status==="delayed"){
+      S.notes.push({id:"d"+f.id,type:"warn",text:f.num+" ("+f.oc+" to "+f.dc+") is delayed by "+f.delay+" minutes in the sample data. Example departure: "+hhmm(mins(f.dep)+f.delay)+".",time:"Demo alert",read:false});
+    }
+    if(f.status==="cancelled"){
+      S.notes.push({id:"c"+f.id,type:"bad",text:f.num+" ("+f.oc+" to "+f.dc+") is cancelled in the sample data. Check with the airline for actual information.",time:"Demo alert",read:false});
+    }
+  });
+}
+function renderNotes(){
+  var list=S.notes;
+  var unread=list.filter(function(n){return !n.read;}).length;
+  var icons={warn:"!",bad:"×",info:"i"};
+
+  $("#notes").innerHTML=list.map(function(n){
+    return '<li class="note '+(n.read?"":"unread")+'">'+
+      '<span class="ic '+n.type+'" aria-hidden="true">'+icons[n.type]+'</span>'+
+      '<p>'+esc(n.text)+'<br><small>'+esc(n.time)+(n.read?"":" · Unread")+'</small></p>'+
+      '<button class="btn" data-read="'+esc(n.id)+'" '+(n.read?"disabled":"")+' aria-label="Mark notification as read">Read</button>'+
+      '<button class="btn" data-del="'+esc(n.id)+'" aria-label="Dismiss notification">Dismiss</button></li>';
+  }).join("");
+
+  $("#notes-empty").hidden=list.length!==0;
+  $("#unread-text").textContent=unread+" unread of "+list.length;
+  $("#badge").textContent=unread;
+  $("#badge").hidden=unread===0;
+}
+
+/* Pickup assistant */
+function fillPickup(){
+  $("#p-flight").innerHTML=F.map(function(f){
+    return '<option value="'+f.id+'">'+esc(f.num)+' · '+esc(f.oct)+' to '+esc(f.dct)+' · lands '+f.arr+(f.status==="cancelled"?" (cancelled sample)":"")+'</option>';
+  }).join("");
+  $("#p-flight").value="3";
+}
+function calcPickup(){
+  var f=byId(Number($("#p-flight").value));
+  var result=$("#p-result");
+  var travel=Number($("#p-travel").value);
+  var buffer=Number($("#p-buffer").value);
+
+  if(!f){
+    result.className="result bad";
+    result.textContent="Choose a flight to create a pickup plan.";
+    pickupText="";
+    return;
+  }
+  if(!Number.isFinite(travel)||travel<5||travel>300){
+    result.className="result bad";
+    result.textContent="Enter a travel time between 5 and 300 minutes.";
+    pickupText="";
+    return;
+  }
+  if(!Number.isFinite(buffer)||buffer<0||buffer>180){
+    result.className="result bad";
+    result.textContent="Enter a passenger exit time between 0 and 180 minutes.";
+    pickupText="";
+    return;
+  }
+  if(f.status==="cancelled"){
+    result.className="result bad";
+    result.innerHTML="<p><strong>"+esc(f.num)+" is cancelled in the sample data.</strong></p><p>Do not use this sample schedule to plan a real journey. Check the airline's official status.</p>";
+    pickupText="";
+    return;
+  }
+
+  var landing=mins(f.arr)+(f.status==="delayed"?f.delay:0);
+  var ready=landing+buffer;
+  var leave=ready-travel;
+
+  result.className="result";
+  result.innerHTML="<p>Estimated time to leave</p><p class=\"t\">"+hhmm(leave)+"</p>"+
+    "<p>Sample expected landing: "+hhmm(landing)+" at "+f.dc+" ("+esc(f.dct)+").</p>"+
+    "<p>Estimated passenger ready time: "+hhmm(ready)+".</p>"+
+    (f.status==="delayed"?"<p>Includes the sample delay of "+f.delay+" minutes.</p>":"")+
+    "<p class=\"small-note\">Calculation only. Actual flight and road conditions may differ.</p>";
+
+  pickupText="Hi! Your flight "+f.num+" has a sample expected landing time of "+hhmm(landing)+". I plan to reach the airport around "+hhmm(ready)+". Please message me when you land. These times are estimates, not live flight information.";
+}
+
+/* Views and airport data */
+var AP={
+ HYD:["Rajiv Gandhi International Airport, Hyderabad",17.2403,78.4294],
+ DEL:["Indira Gandhi International Airport, Delhi",28.5562,77.1000],
+ BOM:["Chhatrapati Shivaji Maharaj International Airport, Mumbai",19.0896,72.8656],
+ BLR:["Kempegowda International Airport, Bengaluru",13.1986,77.7066],
+ VTZ:["Visakhapatnam Airport",17.7212,83.2245],
+ MAA:["Chennai International Airport",12.9941,80.1709],
+ COK:["Cochin International Airport, Kochi",10.1520,76.4019],
+ RJA:["Rajahmundry Airport",17.1104,81.8182],
+ AMD:["Sardar Vallabhbhai Patel International Airport, Ahmedabad",23.0772,72.6347],
+ GOI:["Goa (Dabolim) Airport",15.3808,73.8314],
+ CCU:["Netaji Subhas Chandra Bose International Airport, Kolkata",22.6547,88.4467]
 };
-table.appendChild(row);
-});
-updateStats();
+
+function view(name){
+  ["flights","pickup","weather","airport","alerts"].forEach(function(v){
+    $("#view-"+v).hidden=v!==name;
+  });
+  $$(".nav-btn").forEach(function(b){
+    if(b.dataset.view===name)b.setAttribute("aria-current","page");
+    else b.removeAttribute("aria-current");
+  });
+  window.scrollTo({top:0,behavior:"auto"});
+  if(name==="pickup")calcPickup();
+  if(name==="weather")loadWeather(false);
+  if(name==="airport")renderAirport();
 }
 
-function updateStats(){
-document.getElementById("total").textContent=flights.length;
-document.getElementById("scheduled").textContent=flights.filter(f=>f.status==="Scheduled").length;
-document.getElementById("delayed").textContent=flights.filter(f=>f.status==="Delayed").length;
-document.getElementById("cancelled").textContent=flights.filter(f=>f.status==="Cancelled").length;
+/* Weather descriptions use Open-Meteo WMO weather codes */
+function weatherDescription(code){
+  var map={
+    0:"Clear sky",
+    1:"Mainly clear",
+    2:"Partly cloudy",
+    3:"Overcast",
+    45:"Fog",
+    48:"Depositing rime fog",
+    51:"Light drizzle",
+    53:"Moderate drizzle",
+    55:"Dense drizzle",
+    56:"Light freezing drizzle",
+    57:"Dense freezing drizzle",
+    61:"Light rain",
+    63:"Moderate rain",
+    65:"Heavy rain",
+    66:"Light freezing rain",
+    67:"Heavy freezing rain",
+    71:"Light snow",
+    73:"Moderate snow",
+    75:"Heavy snow",
+    77:"Snow grains",
+    80:"Slight rain showers",
+    81:"Moderate rain showers",
+    82:"Violent rain showers",
+    85:"Slight snow showers",
+    86:"Heavy snow showers",
+    95:"Thunderstorm",
+    96:"Thunderstorm with slight hail",
+    99:"Thunderstorm with heavy hail"
+  };
+  return Object.prototype.hasOwnProperty.call(map,code)?map[code]:"Unknown conditions";
+}
+function renderWeather(){
+  var keys=Object.keys(AP);
+  var liveCount=keys.filter(function(k){return W[k]&&W[k].live;}).length;
+  var loadingCount=keys.filter(function(k){return W[k]&&W[k].loading;}).length;
+
+  $("#w-grid").innerHTML=keys.map(function(k){
+    var w=W[k];
+    var ready=!!(w&&w.live);
+    var temperature=ready?Math.round(w.t)+"°C":"—";
+    var wind=ready?Math.round(w.w)+" km/h":"—";
+    var condition=ready?w.c:(w&&w.error?"Weather unavailable":"Not loaded");
+    return '<article class="card wcard fade">'+
+      '<strong>'+k+'</strong>'+
+      '<div class="city">'+esc(AP[k][0])+'</div>'+
+      '<div class="temp">'+temperature+'</div>'+
+      '<div>'+esc(condition)+'</div>'+
+      '<div class="city">Wind: '+wind+'</div>'+
+      '<span class="tag '+(ready?"live":"offline")+'">'+(ready?"Live weather":"Unavailable")+'</span>'+
+      '</article>';
+  }).join("");
+
+  if(loadingCount){
+    $("#w-status").textContent="Loading current weather. Some airports may take longer to respond.";
+  }else if(liveCount===keys.length){
+    $("#w-status").textContent="Live weather loaded for all listed airports. Weather may change; check official airport and airline updates.";
+  }else if(liveCount>0){
+    $("#w-status").textContent="Live weather available for "+liveCount+" of "+keys.length+" airports. Unavailable airports are not showing invented weather values.";
+  }else{
+    $("#w-status").textContent="Weather service could not be reached. Check your internet connection and refresh. No fake weather values are shown.";
+  }
+}
+function loadWeather(force){
+  var keys=Object.keys(AP);
+  if(weatherLoading)return;
+  if(!force&&keys.every(function(k){return W[k]&&!W[k].error;})){
+    renderWeather();
+    return;
+  }
+
+  weatherLoading=true;
+  keys.forEach(function(k){W[k]={loading:true};});
+  renderWeather();
+
+  Promise.all(keys.map(function(k){
+    var a=AP[k];
+    var url="https://api.open-meteo.com/v1/forecast?latitude="+a[1]+
+      "&longitude="+a[2]+"&current=temperature_2m,wind_speed_10m,weather_code&timezone=auto";
+
+    return fetch(url)
+      .then(function(response){
+        if(!response.ok)throw new Error("Weather request failed");
+        return response.json();
+      })
+      .then(function(data){
+        if(!data.current||
+          typeof data.current.temperature_2m!=="number"||
+          typeof data.current.wind_speed_10m!=="number"||
+          typeof data.current.weather_code!=="number"){
+          throw new Error("Weather data is incomplete");
+        }
+        W[k]={
+          t:data.current.temperature_2m,
+          w:data.current.wind_speed_10m,
+          c:weatherDescription(data.current.weather_code),
+          live:true,
+          time:data.current.time||""
+        };
+      })
+      .catch(function(){
+        W[k]={live:false,error:true};
+      });
+  })).then(function(){
+    weatherLoading=false;
+    renderWeather();
+    if(!$("#view-airport").hidden)renderAirport();
+  }).catch(function(){
+    weatherLoading=false;
+    renderWeather();
+  });
+}
+function weatherSummary(k){
+  var w=W[k];
+  if(!w||!w.live)return "Live weather is currently unavailable.";
+  return Math.round(w.t)+"°C, "+w.c+", wind "+Math.round(w.w)+" km/h.";
+}
+function renderAirport(){
+  var k=$("#a-sel").value;
+  var a=AP[k];
+  if(!a)return;
+
+  var related=F.filter(function(f){return f.oc===k||f.dc===k;})
+    .sort(function(x,y){return mins(x.dep)-mins(y.dep);});
+
+  $("#a-flights").innerHTML='<h2>'+k+' · '+esc(a[0])+'</h2>'+
+    '<p>'+esc(weatherSummary(k))+'</p>'+
+    '<h2 style="margin-top:16px">Sample flights here</h2><ul class="plain">'+
+    (related.map(function(f){
+      var departure=f.oc===k;
+      return '<li><strong>'+esc(f.num)+'</strong> '+(departure?'departs to '+f.dc+' at '+f.dep:'arrives from '+f.oc+' at '+f.arr)+
+        '<br><small class="city">Sample terminal '+f.term+', gate '+f.gate+' · '+LABEL[f.status]+
+        (f.status==="delayed"?" +"+f.delay+" min":"")+'</small></li>';
+    }).join("")||"<li>No sample flights at this airport.</li>")+
+    '</ul><p class="small-note">Flight times, gates and terminals are examples only.</p>';
+
+  $("#a-steps").innerHTML=
+    '<h2>Departure guide</h2><ol class="steps">'+
+    '<li>Enter the correct terminal and check your airline on the airport departures screens.</li>'+
+    '<li>Complete check-in and baggage drop if needed.</li>'+
+    '<li>Pass through security screening.</li>'+
+    '<li>Check the airport screens for your actual gate and boarding time.</li>'+
+    '</ol><h2>Arrival guide</h2><ol class="steps">'+
+    '<li>Follow airport signs to Arrivals and Baggage Claim.</li>'+
+    '<li>Check the baggage screens for your belt number.</li>'+
+    '<li>Follow signs for the official pickup area, taxi rank or other transport.</li>'+
+    '</ol><a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a[0])+'">Open in Google Maps</a>'+
+    '<p class="small-note">This is general guidance, not indoor turn-by-turn navigation. Follow airport signs and staff instructions.</p>';
 }
 
-function searchFlights(){
-const q=document.getElementById("search").value.trim().toLowerCase();
-visibleFlights=flights.filter(f=>
-[f.number,f.airline,f.status,f.departure,f.destination]
-.some(v=>v.toLowerCase().includes(q))
-);
-renderFlights();
-document.getElementById("message").textContent=visibleFlights.length+" flight(s) found.";
+/* Initialise */
+function init(){
+  var airlines=Array.from(new Set(F.map(function(f){return f.airline;}))).sort();
+  $("#airline").innerHTML+='<option value="all">All airlines</option>';
+  $("#airline").innerHTML= '<option value="all">All airlines</option>'+
+    airlines.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>';}).join("");
+
+  $("#a-sel").innerHTML=Object.keys(AP).map(function(k){
+    return '<option value="'+k+'">'+k+' · '+esc(AP[k][0])+'</option>';
+  }).join("");
+
+  $("#dateline").textContent="Sample schedule for "+new Date().toLocaleDateString(undefined,{
+    weekday:"long",day:"numeric",month:"long",year:"numeric"
+  })+". These are not live flights.";
+
+  fillPickup();
+  seedNotes();
+  renderStats();
+  renderNotes();
+  render();
+
+  $("#q").addEventListener("input",function(e){S.q=e.target.value;render();});
+  $("#airline").addEventListener("change",function(e){S.airline=e.target.value;render();});
+  $("#sort").addEventListener("click",function(){S.asc=!S.asc;render();});
+
+  $("#reset").addEventListener("click",function(){
+    S.q="";S.status="all";S.airline="all";S.sel=null;
+    $("#q").value="";
+    $("#airline").value="all";
+    render();
+    toast("Filters reset");
+  });
+
+  $$("[data-status]").forEach(function(button){
+    button.addEventListener("click",function(){
+      S.status=button.dataset.status;
+      render();
+    });
+  });
+
+  $("#tbody").addEventListener("click",function(event){
+    var row=event.target.closest("tr[data-id]");
+    if(row)selectFlight(Number(row.dataset.id));
+  });
+  $("#tbody").addEventListener("keydown",function(event){
+    var row=event.target.closest("tr[data-id]");
+    if(!row)return;
+    if(event.key==="Enter"||event.key===" "){
+      event.preventDefault();
+      selectFlight(Number(row.dataset.id));
+      var selected=document.querySelector('tr[data-id="'+row.dataset.id+'"]');
+      if(selected)selected.focus();
+    }else if(event.key==="ArrowDown"&&row.nextElementSibling){
+      event.preventDefault();row.nextElementSibling.focus();
+    }else if(event.key==="ArrowUp"&&row.previousElementSibling){
+      event.preventDefault();row.previousElementSibling.focus();
+    }
+  });
+
+  $$(".nav-btn").forEach(function(button){
+    button.addEventListener("click",function(){view(button.dataset.view);});
+  });
+
+  $("#notes").addEventListener("click",function(event){
+    var readButton=event.target.closest("[data-read]");
+    var deleteButton=event.target.closest("[data-del]");
+
+    if(readButton){
+      S.notes.forEach(function(n){
+        if(String(n.id)===readButton.dataset.read)n.read=true;
+      });
+      renderNotes();
+    }
+    if(deleteButton){
+      S.notes=S.notes.filter(function(n){return String(n.id)!==deleteButton.dataset.del;});
+      renderNotes();
+    }
+  });
+
+  $("#markall").addEventListener("click",function(){
+    S.notes.forEach(function(n){n.read=true;});
+    renderNotes();
+    toast("All notifications marked as read");
+  });
+  $("#clearall").addEventListener("click",function(){
+    S.notes=[];
+    renderNotes();
+    toast("Notifications cleared");
+  });
+
+  ["#p-flight","#p-travel","#p-buffer"].forEach(function(selector){
+    $(selector).addEventListener("input",calcPickup);
+    $(selector).addEventListener("change",calcPickup);
+  });
+
+  $("#p-copy").addEventListener("click",function(){
+    if(!pickupText){
+      toast("Choose a valid, non-cancelled sample flight first");
+      return;
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(pickupText).then(function(){
+        toast("Message copied");
+      }).catch(function(){
+        fallbackCopy(pickupText);
+      });
+    }else{
+      fallbackCopy(pickupText);
+    }
+  });
+
+  $("#a-sel").addEventListener("change",renderAirport);
+  $("#w-refresh").addEventListener("click",function(){
+    if(weatherLoading){
+      toast("Weather is already loading");
+      return;
+    }
+    loadWeather(true);
+  });
+}
+function fallbackCopy(text){
+  var textarea=document.createElement("textarea");
+  textarea.value=text;
+  textarea.setAttribute("readonly","");
+  textarea.style.position="fixed";
+  textarea.style.opacity="0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try{
+    var copied=document.execCommand("copy");
+    toast(copied?"Message copied":"Copy failed. Please copy the message manually.");
+  }catch(error){
+    toast("Copy failed. Please copy the message manually.");
+  }
+  document.body.removeChild(textarea);
 }
 
-function showAllFlights(){
-document.getElementById("search").value="";
-visibleFlights=[...flights];
-renderFlights();
-document.getElementById("message").textContent="Showing all flights.";
-}
-
-function calculatePickup(){
-if(!selectedFlight){alert("Please select a flight first.");return;}
-const t=document.getElementById("travel").value;
-const p=document.getElementById("prep").value;
-if(t===""||p===""||Number(t)<0||Number(p)<0){
-alert("Please enter valid time values.");return;
-}
-const parts=selectedFlight.arrival.split(":");
-const arrivalMinutes=Number(parts[0])*60+Number(parts[1]);
-const suggested=((arrivalMinutes-120-Number(t)-Number(p))%1440+1440)%1440;
-const h=String(Math.floor(suggested/60)).padStart(2,"0");
-const m=String(suggested%60).padStart(2,"0");
-document.getElementById("pickupResult").textContent=
-"Suggested departure from home: "+h+":"+m+
-". This is a demonstration estimate only.";
-}
-
-function showWeather(){
-document.getElementById("weatherResult").textContent=
-"Temperature: 29°C | Condition: Partly Cloudy | Wind: 12 km/h. Sample data only; not live weather.";
-}
-
-function checkAlerts(){
-const box=document.getElementById("alertResult");
-box.innerHTML="";
-const list=flights.filter(f=>f.status==="Delayed"||f.status==="Cancelled");
-if(!list.length){box.textContent="No delayed or cancelled flights.";return;}
-list.forEach(f=>{
-const p=document.createElement("p");
-p.textContent=f.number+" - "+f.airline+": "+f.status;
-box.appendChild(p);
-});
-}
-
-function openNavigation(){
-if(!selectedFlight){alert("Please select a flight first.");return;}
-const destination=encodeURIComponent(selectedFlight.destination+" Airport");
-window.open("https://www.google.com/maps/search/?api=1&query="+destination,"_blank");
-}
-
-function saveOffline(){
-const blob=new Blob([JSON.stringify(flights,null,2)],{type:"application/json"});
-const url=URL.createObjectURL(blob);
-const link=document.createElement("a");
-link.href=url;
-link.download="flight_cache.json";
-link.click();
-URL.revokeObjectURL(url);
-document.getElementById("offlineMessage").textContent="Flight data export started.";
-}
-
-document.getElementById("offlineFile").addEventListener("change",function(event){
-const file=event.target.files[0];
-if(!file)return;
-const reader=new FileReader();
-reader.onload=function(){
-try{
-const data=JSON.parse(reader.result);
-const valid=Array.isArray(data)&&data.every(f=>
-f.number&&f.airline&&
-["Scheduled","Delayed","Cancelled"].includes(f.status)&&
-f.departure&&f.destination&&/^\d{2}:\d{2}$/.test(f.arrival)
-);
-if(!valid)throw new Error("Invalid data");
-flights=data.map(f=>({...f}));
-visibleFlights=[...flights];
-selectedFlight=null;
-renderFlights();
-document.getElementById("offlineMessage").textContent="Offline data loaded successfully.";
-}catch(error){
-alert("Unable to load file. Please select a valid flight data JSON file.");
-}
-};
-reader.readAsText(file);
-event.target.value="";
-});
-
-function goHome(){
-window.location.href="index.html";
-}
-
-renderFlights();
+init();
+})();
 </script>
 </body>
 </html>
