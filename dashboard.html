@@ -1,979 +1,431 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AeroLay Dashboard</title>
-<meta name="description" content="AeroLay flight dashboard with sample flight data and live airport weather when available.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23071a3d'/%3E%3Cpath d='M5 18l22-9-7 15-4-6-5 3z' fill='%2322d3ee'/%3E%3C/svg%3E">
+<title>AeroLay Dashboard – White Edition (Demo Data)</title>
+<meta name="description" content="AeroLay flight tracking dashboard. Demo data only, not live flights.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%231f4bff'/%3E%3Cpath transform='rotate(45 12 12)' fill='%23fff' d='M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/%3E%3C/svg%3E">
 <style>
-:root {
-  --bg:#06122b;
-  --bg2:#0a1a3a;
-  --panel:#0d1f44;
-  --panel2:#12285a;
-  --line:#1d3567;
-  --text:#e8f0ff;
-  --muted:#93a9d3;
-  --cyan:#22d3ee;
-  --ok:#4ade80;
-  --warn:#fbbf24;
-  --bad:#fb7185;
-  --radius:14px;
-  --font:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
-}
-* { box-sizing:border-box; }
-html { scroll-behavior:smooth; }
-body {
-  margin:0;
-  min-height:100vh;
-  font-family:var(--font);
-  line-height:1.5;
-  color:var(--text);
-  background:radial-gradient(1200px 600px at 80% -10%,#0f2a63 0%,transparent 60%),var(--bg);
-}
-button,input,select { font:inherit; }
-button { color:inherit; }
-a { color:var(--cyan); }
-:focus-visible { outline:3px solid var(--cyan); outline-offset:3px; }
-[hidden] { display:none!important; }
-.sr {
-  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
-  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
-}
-.skip {
-  position:absolute;top:-60px;left:8px;z-index:100;
-  padding:8px 14px;background:var(--cyan);color:#012;border-radius:8px;
-}
-.skip:focus { top:8px; }
+:root{--bl:#1f4bff;--bl2:#1d4ed8;--nv:#0b1340;--mu:#475a8a;--bd:#dbe5f5;--bg:#f4f7ff;--soft:#eef3ff;--font:"Segoe UI",system-ui,-apple-system,Arial,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font);color:var(--nv);line-height:1.5;min-height:100vh;background:radial-gradient(800px 500px at 80% 0%,rgba(31,75,255,.08),transparent 60%),var(--bg)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #f59e0b;outline-offset:2px;border-radius:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.skip{position:absolute;left:8px;top:-60px;background:#f59e0b;color:#111;padding:8px 14px;border-radius:8px;z-index:99;font-weight:700}.skip:focus{top:8px}
+.shell{display:flex;min-height:100vh}
+.area{flex:1;min-width:0}
 
-header {
-  position:sticky;top:0;z-index:20;
-  background:rgba(6,18,43,.94);
-  border-bottom:1px solid var(--line);
-  backdrop-filter:blur(12px);
-}
-.bar {
-  max-width:1280px;margin:auto;padding:12px 20px;
-  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-}
-.brand {
-  display:flex;align-items:center;gap:10px;
-  color:var(--text);text-decoration:none;
-  font-size:1.4rem;font-weight:800;
-}
-.brand svg { width:34px;height:34px; }
-.brand b { color:var(--cyan); }
-nav { display:flex;gap:6px;margin-left:auto;flex-wrap:wrap; }
-.nav-btn {
-  min-height:44px;padding:9px 14px;border-radius:999px;
-  background:transparent;border:1px solid transparent;
-  color:var(--muted);font-weight:600;cursor:pointer;
-}
-.nav-btn:hover { color:var(--text);background:var(--panel); }
-.nav-btn[aria-current="page"] {
-  background:var(--panel2);color:var(--cyan);border-color:var(--cyan);
-}
-.badge {
-  display:inline-grid;place-items:center;min-width:20px;height:20px;
-  padding:0 6px;margin-left:4px;border-radius:12px;
-  background:var(--bad);color:#26050d;font-size:.75rem;font-weight:800;
-}
-.demo-strip {
-  padding:8px 16px;text-align:center;
-  background:linear-gradient(90deg,#0b2a5e,#0c3a6b);
-  border-top:1px solid var(--line);font-size:.9rem;color:#cfeeff;
-}
-.demo-strip strong { color:var(--cyan); }
+/* Sidebar */
+.side{position:sticky;top:16px;height:calc(100vh - 32px);margin:16px 0 16px 16px;width:250px;flex:none;display:flex;flex-direction:column;background:#fff;border:1px solid var(--bd);border-radius:26px;padding:20px 14px 14px;transition:width .25s;box-shadow:0 12px 40px rgba(31,75,255,.1)}
+.sb{display:flex;align-items:center;gap:10px;padding:0 6px 22px}
+.sb .lg{width:30px;height:30px;flex:none;fill:var(--bl);transform:rotate(45deg)}
+.bname{font-size:1.65rem;font-weight:800;letter-spacing:.2px;color:var(--nv);text-decoration:none}
+.col{margin-left:auto;background:none;border:0;color:var(--bl);cursor:pointer;padding:6px;border-radius:8px;display:grid;place-items:center}
+.col:hover{background:var(--soft)}
+.col svg{width:24px;height:24px}
+.nav{display:grid;gap:8px}
+.nb{position:relative;display:flex;align-items:center;gap:14px;background:none;border:0;border-radius:999px;padding:8px 14px 8px 8px;cursor:pointer;color:#1b2a5e;font-weight:600;text-align:left;min-height:50px;transition:.2s}
+.nb .ico{width:36px;height:36px;border-radius:50%;background:var(--soft);color:var(--bl);display:grid;place-items:center;flex:none;transition:.2s}
+.nb .ico svg{width:18px;height:18px;fill:currentColor}
+.nb:hover{background:var(--soft)}
+.nb[aria-current="page"]{background:linear-gradient(90deg,#1f4bff,#3b6bff);color:#fff;box-shadow:0 10px 24px rgba(31,75,255,.35)}
+.nb[aria-current="page"] .ico{background:#fff;color:var(--bl)}
+.bdg{margin-left:auto;background:#dc2626;color:#fff;border-radius:10px;min-width:22px;height:22px;display:grid;place-items:center;font-size:.75rem;font-weight:800;padding:0 6px}.bdg[hidden]{display:none}
+.helpc{margin-top:auto;position:relative;overflow:hidden;border-radius:20px;padding:14px;background:linear-gradient(135deg,#2a4bff,#0a1a7a);color:#fff}
+.helpc svg.wv{position:absolute;inset:0;width:100%;height:100%}
+.helpc>*:not(.wv){position:relative}
+.helpc .q{width:34px;height:34px;border-radius:50%;background:#fff;color:var(--bl);font-weight:800;display:grid;place-items:center;margin-bottom:10px}
+.helpc strong{display:block;font-size:1rem}.helpc span.s{display:block;font-size:.82rem;color:#d6e0ff;margin-bottom:12px}
+.hb{width:100%;background:rgba(5,10,50,.55);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:999px;padding:10px;font-weight:700;cursor:pointer;min-height:42px;transition:.2s}
+.hb:hover{background:rgba(5,10,50,.8)}
+.ov{display:none}
 
-main { max-width:1280px;margin:auto;padding:24px 20px 56px; }
-h1 { margin:0 0 6px;font-size:clamp(1.6rem,3.5vw,2.3rem);line-height:1.2; }
-h2 { margin:0 0 12px;font-size:1.15rem; }
-.sub { color:var(--muted);margin:0 0 22px;max-width:70ch; }
-.card {
-  padding:18px;border:1px solid var(--line);border-radius:var(--radius);
-  background:linear-gradient(180deg,var(--panel),var(--bg2));
-}
-.stats {
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:14px;margin-bottom:20px;
-}
-.stat {
-  padding:16px 18px;text-align:left;cursor:pointer;
-  border:1px solid var(--line);border-radius:var(--radius);
-  background:linear-gradient(180deg,var(--panel),var(--bg2));
-}
-.stat:hover { border-color:var(--cyan); }
-.stat[aria-pressed="true"] { border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan); }
-.stat .n { display:block;font-size:2rem;font-weight:800;line-height:1.2; }
-.stat .l { color:var(--muted);font-size:.92rem; }
-.stat.all .n { color:var(--cyan); }
-.stat.ok .n { color:var(--ok); }
-.stat.warn .n { color:var(--warn); }
-.stat.bad .n { color:var(--bad); }
+/* Main */
+.mtop{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 24px;background:rgba(244,247,255,.85);backdrop-filter:blur(12px)}
+.mbtn{display:none;background:#fff;border:1px solid var(--bd);border-radius:12px;width:44px;height:44px;place-items:center;cursor:pointer}
+.mbtn svg{width:22px;height:22px;fill:none;stroke:var(--nv);stroke-width:2;stroke-linecap:round}
+.mbrand{display:none;font-weight:800;font-size:1.2rem}
+.demo{margin-left:auto;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:6px 14px;border-radius:999px;font-weight:700;font-size:.8rem;text-align:center}
+main{padding:8px 24px 40px;max-width:1240px}
+h1{font-size:clamp(1.6rem,3.5vw,2.1rem);line-height:1.2}h2{font-size:1.1rem;margin-bottom:10px}
+.mu{color:var(--mu)}.sm{font-size:.85rem}
+.card{background:#fff;border:1px solid var(--bd);border-radius:20px;padding:18px;box-shadow:0 4px 18px rgba(31,75,255,.06)}
+.hero{position:relative;overflow:hidden;border-radius:24px;padding:26px;margin-bottom:18px;background:linear-gradient(120deg,#1f4bff,#0b1a8a);color:#fff}
+.hero p{max-width:58ch;position:relative}.hero h1{position:relative}
+.hero svg{position:absolute;right:0;bottom:0;width:55%;height:100%;opacity:.55}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat{text-align:left;cursor:pointer;background:#fff;border:1px solid var(--bd);border-top:4px solid var(--c);border-radius:18px;padding:16px;transition:.2s;color:var(--mu);box-shadow:0 4px 18px rgba(31,75,255,.06)}
+.stat:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(31,75,255,.14)}
+.stat[aria-pressed="true"]{background:var(--soft);box-shadow:0 0 0 2px var(--c)}
+.stat .n{display:block;font-size:2.3rem;font-weight:800;color:var(--c);line-height:1.1}
+.tools{display:grid;grid-template-columns:1fr auto auto;gap:12px;margin-bottom:12px}
+.fld input,.fld select,.pf input,.pf select{width:100%;background:#fff;border:1px solid #b8c7e3;border-radius:14px;padding:11px 14px;min-height:48px}
+.fld input:focus,.fld select:focus,.pf input:focus,.pf select:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(31,75,255,.15);outline:none}
+.btn,.chip{border:1px solid #b8c7e3;background:#fff;border-radius:999px;padding:8px 18px;min-height:42px;font-weight:700;cursor:pointer;transition:.2s;color:var(--bl2)}
+.btn:hover,.chip:hover{background:var(--soft);border-color:var(--bl)}
+.chip[aria-pressed="true"],.btn.pri{background:var(--bl);border-color:var(--bl);color:#fff}
+.btn.pri:hover{background:var(--bl2)}.btn:disabled{opacity:.45;cursor:default}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.cnt{margin-left:auto;font-size:.9rem;color:var(--mu)}
+.lay{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(290px,1fr);gap:18px;align-items:start}
+.tw{padding:0;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--bd)}
+th{font-size:.82rem;color:#2a3a6e;background:var(--soft)}
+th button{background:none;border:0;color:var(--bl2);font-weight:700;cursor:pointer}
+tbody tr{cursor:pointer;transition:.15s}tbody tr:hover{background:#f6f9ff}
+tbody tr[aria-selected="true"]{background:#e3ecff;box-shadow:inset 4px 0 0 var(--bl)}
+td.fn{font-weight:800;color:var(--bl2)}.cd{font-weight:700}.ct{display:block;color:var(--mu);font-size:.82rem}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:700;border:1px solid}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.pill.ok{color:#166534;background:#dcfce7;border-color:#86efac}
+.pill.wn{color:#92400e;background:#fef3c7;border-color:#fcd34d}
+.pill.bad{color:#991b1b;background:#fee2e2;border-color:#fca5a5}
+.emp{padding:36px 18px;text-align:center;color:var(--mu)}.emp[hidden]{display:none}
+.det{position:sticky;top:84px}
+.rt{display:flex;align-items:center;gap:10px;margin:12px 0}.rt .big{font-size:2rem;font-weight:800;color:var(--bl2)}.rt .ln{flex:1;border-top:3px dotted var(--bl);position:relative}
+.rt .ln::after{content:"✈";position:absolute;left:50%;top:-16px;transform:translateX(-50%);color:var(--bl);background:#fff;padding:0 4px}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.dl div{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:9px 12px}
+.dl dt{font-size:.78rem;color:var(--mu)}.dl dd{margin:0;font-weight:700}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.fade{animation:in .3s ease}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.nl{list-style:none;padding:0;display:grid;gap:10px}
+.nt{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--bd);border-radius:16px;background:#fff;flex-wrap:wrap}
+.nt.un{border-color:#9db8ff;background:var(--soft)}
+.nt .ic{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none}
+.ic.warn{background:#fef3c7;color:#92400e}.ic.bad{background:#fee2e2;color:#991b1b}.ic.info{background:#dbe6ff;color:var(--bl2)}
+.nt p{flex:1;min-width:200px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pf{display:grid;gap:14px}.pf label{display:grid;gap:6px;font-weight:600}.pf small{font-weight:400;color:var(--mu)}
+.res{border:1px solid #9db8ff;background:var(--soft);border-radius:16px;padding:16px}
+.res .t{font-size:2.4rem;font-weight:800;color:var(--bl2)}.res.bad{border-color:#fca5a5;background:#fee2e2}.res.bad .t{color:#b91c1c}
+.ck{list-style:none;padding:0;display:grid;gap:6px;margin:12px 0}.ck label{display:flex;gap:10px;align-items:center;cursor:pointer;min-height:36px}.ck input{width:20px;height:20px;accent-color:var(--bl)}
+.wx{display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--bd);border-radius:16px;padding:14px;margin:10px 0}
+.wx .t{font-size:2.4rem;font-weight:800;color:var(--bl2)}
+.pl{list-style:none;padding:0;display:grid;gap:8px}.pl li{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+ol.st{padding-left:22px;display:grid;gap:8px;margin:8px 0 14px}
+footer{padding:0 24px 30px;color:var(--mu);font-size:.88rem}footer a{color:var(--bl2)}
+dialog{margin:auto;background:#fff;color:var(--nv);border:1px solid var(--bd);border-radius:22px;padding:24px;max-width:480px;width:calc(100% - 32px);box-shadow:0 24px 60px rgba(11,19,64,.3)}
+dialog::backdrop{background:rgba(11,19,64,.5)}
+dialog ul{padding-left:20px;display:grid;gap:8px;margin:12px 0 18px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,30px);background:var(--nv);color:#fff;padding:12px 20px;border-radius:14px;opacity:0;pointer-events:none;transition:.3s;z-index:99;max-width:90vw}.toast.show{opacity:1;transform:translate(-50%,0)}
 
-.tools { display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,230px) auto;gap:12px;margin-bottom:12px; }
-.field { position:relative; }
-.field input,.field select,.pf input,.pf select {
-  width:100%;min-height:46px;padding:11px 14px;
-  background:var(--bg);color:var(--text);
-  border:1px solid var(--line);border-radius:12px;
+@media(min-width:901px){
+ .shell.collapsed .side{width:84px;padding-inline:12px}
+ .shell.collapsed .bname,.shell.collapsed .lbl,.shell.collapsed .helpc{display:none}
+ .shell.collapsed .sb{flex-direction:column;padding-inline:0}.shell.collapsed .col{margin:0}
+ .shell.collapsed .nb{padding:7px;justify-content:center}.shell.collapsed .bdg{position:absolute;top:0;right:2px;margin:0}
 }
-.field input { padding-left:42px; }
-.field svg {
-  position:absolute;left:13px;top:50%;
-  transform:translateY(-50%);width:18px;height:18px;color:var(--muted);
+@media(max-width:1023px){.lay{grid-template-columns:1fr}.det{position:static}.stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){
+ .side{position:fixed;top:0;left:0;bottom:0;height:auto;margin:10px;width:min(300px,86vw);transform:translateX(-120%);visibility:hidden;transition:transform .25s,visibility .25s;z-index:60}
+ .shell.open .side{transform:none;visibility:visible}
+ .shell.open .ov{display:block;position:fixed;inset:0;background:rgba(11,19,64,.5);z-index:50}
+ .mbtn{display:grid}.mbrand{display:block}.col{display:none}
+ .mtop,main,footer{padding-inline:16px}
 }
-.chips { display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px; }
-.chip,.btn {
-  min-height:40px;padding:8px 15px;border-radius:999px;
-  border:1px solid var(--line);background:var(--panel);
-  cursor:pointer;font-weight:600;
+@media(max-width:700px){
+ .tools,.g2{grid-template-columns:1fr}.demo{font-size:.68rem;padding:4px 10px}
+ thead{position:absolute;left:-9999px}table,tbody,tr,td{display:block;width:100%}
+ tbody tr{padding:12px 14px;border-bottom:1px solid var(--bd)}
+ td{border:0;padding:4px 0;display:flex;justify-content:space-between;gap:12px;text-align:right}
+ td::before{content:attr(data-l);color:var(--mu);font-size:.82rem;text-align:left}.ct{display:inline;margin-left:6px}
 }
-.chip:hover,.btn:hover { border-color:var(--cyan); }
-.chip[aria-pressed="true"] { background:var(--cyan);color:#022;border-color:var(--cyan); }
-.btn.primary { background:var(--cyan);color:#022;border-color:var(--cyan); }
-.btn.primary:hover { background:#67e8f9; }
-.btn:disabled { opacity:.55;cursor:not-allowed; }
-.count { margin-left:auto;color:var(--muted);font-size:.9rem; }
-
-.layout { display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:18px;align-items:start; }
-.twrap { padding:0;overflow:hidden; }
-table { width:100%;border-collapse:collapse; }
-caption { text-align:left; }
-th,td { padding:13px 12px;text-align:left;border-bottom:1px solid var(--line); }
-th { color:var(--muted);font-size:.85rem;background:rgba(18,40,90,.5); }
-th button { border:0;background:transparent;color:var(--cyan);cursor:pointer;font-weight:700; }
-tbody tr { cursor:pointer; }
-tbody tr:hover { background:rgba(34,211,238,.06); }
-tbody tr[aria-selected="true"] { background:rgba(34,211,238,.13);box-shadow:inset 3px 0 0 var(--cyan); }
-td.fn { color:var(--cyan);font-weight:700; }
-.code { font-weight:700; }
-.city { display:block;color:var(--muted);font-size:.85rem; }
-.pill {
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 10px;border:1px solid;border-radius:999px;
-  font-size:.82rem;font-weight:700;white-space:nowrap;
-}
-.pill::before { content:"";width:7px;height:7px;border-radius:50%;background:currentColor; }
-.pill.ok { color:var(--ok);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.08); }
-.pill.warn { color:var(--warn);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08); }
-.pill.bad { color:var(--bad);border-color:rgba(251,113,133,.4);background:rgba(251,113,133,.08); }
-.empty { padding:35px 20px;text-align:center;color:var(--muted); }
-.details { position:sticky;top:145px; }
-.route { display:flex;justify-content:space-between;align-items:center;gap:10px;margin:12px 0 4px; }
-.route .big { font-size:1.8rem;font-weight:800; }
-.route .line { flex:1;height:2px;background:repeating-linear-gradient(90deg,var(--cyan) 0 8px,transparent 8px 14px); }
-.dl { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0; }
-.dl div { min-width:0;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:10px;overflow-wrap:anywhere; }
-.dl dt { color:var(--muted);font-size:.8rem; }
-.dl dd { margin:0;font-weight:700; }
-.actions { display:flex;gap:10px;flex-wrap:wrap; }
-.small-note { color:var(--muted);font-size:.84rem;margin:12px 0 0; }
-.fade { animation:fadein .2s ease; }
-@keyframes fadein { from { opacity:.3;transform:translateY(4px); } to { opacity:1;transform:none; } }
-
-.pgrid { display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start; }
-.pf { display:grid;gap:14px; }
-.pf label { display:grid;gap:6px;font-weight:600; }
-.pf small { color:var(--muted);font-weight:400; }
-.result { padding:16px;border:1px solid var(--cyan);border-radius:12px;background:rgba(34,211,238,.07); }
-.result.bad { border-color:var(--bad);background:rgba(251,113,133,.08); }
-.result .t { color:var(--cyan);font-size:2.1rem;font-weight:800; }
-.result.bad .t { color:var(--bad); }
-.check { display:grid;gap:8px;margin:14px 0;padding:0;list-style:none; }
-.check label { display:flex;gap:10px;align-items:center;min-height:36px;cursor:pointer; }
-.check input { width:20px;height:20px;accent-color:var(--cyan); }
-
-.notes { display:grid;gap:10px;margin:0;padding:0;list-style:none; }
-.note { display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2); }
-.note.unread { border-color:var(--cyan);background:var(--panel); }
-.note .ic { display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;font-weight:800; }
-.ic.warn { color:var(--warn);background:rgba(251,191,36,.15); }
-.ic.bad { color:var(--bad);background:rgba(251,113,133,.15); }
-.ic.info { color:var(--cyan);background:rgba(34,211,238,.15); }
-.note p { flex:1;margin:0;overflow-wrap:anywhere; }
-.note small { color:var(--muted); }
-.wgrid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px; }
-.wcard .temp { margin:8px 0 2px;color:var(--cyan);font-size:2.2rem;font-weight:800;line-height:1.2; }
-.wcard .tag { display:inline-block;margin-top:10px;padding:3px 9px;border-radius:8px;font-size:.8rem;font-weight:700; }
-.tag.live { color:var(--ok);background:rgba(74,222,128,.12); }
-.tag.offline { color:var(--warn);background:rgba(251,191,36,.12); }
-.steps { display:grid;gap:10px;padding-left:22px;margin:8px 0 16px; }
-.plain { display:grid;gap:8px;margin:8px 0;padding:0;list-style:none; }
-.plain li { padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:10px; }
-.row { display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px; }
-
-footer {
-  max-width:1280px;margin:auto;padding:0 20px 36px;
-  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  color:var(--muted);font-size:.9rem;
-}
-.toast {
-  position:fixed;left:50%;bottom:24px;z-index:60;
-  max-width:90vw;padding:12px 20px;border:1px solid var(--cyan);
-  border-radius:12px;background:var(--panel2);
-  opacity:0;pointer-events:none;transform:translate(-50%,20px);transition:.2s;
-}
-.toast.show { opacity:1;transform:translate(-50%,0); }
-
-@media(max-width:1023px) {
-  .layout { grid-template-columns:1fr; }
-  .details { position:static; }
-  .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
-}
-@media(max-width:760px) {
-  .tools,.pgrid { grid-template-columns:1fr; }
-  nav { width:100%;margin:0; }
-  .nav-btn { flex:1;padding:8px 6px; }
-  thead { position:absolute;left:-9999px; }
-  table,tbody,tr,td { display:block;width:100%; }
-  tbody tr { padding:12px 14px;border-bottom:1px solid var(--line); }
-  td { display:flex;justify-content:space-between;gap:12px;padding:5px 0;border:0;text-align:right; }
-  td::before { content:attr(data-label);color:var(--muted);font-size:.85rem;text-align:left; }
-  td .city { display:inline;margin-left:6px; }
-  .note { flex-wrap:wrap; }
-}
-@media(max-width:420px) {
-  main { padding:20px 12px 40px; }
-  .bar { padding:10px 12px; }
-  .stats { gap:8px; }
-  .stat { padding:12px; }
-  .stat .n { font-size:1.7rem; }
-  .dl { gap:7px; }
-  .dl div { padding:8px; }
-}
-@media(prefers-reduced-motion:reduce) {
-  *,*::before,*::after { animation:none!important;transition:none!important;scroll-behavior:auto!important; }
-}
+@media(max-width:420px){.stat .n{font-size:1.8rem}.stats{gap:10px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-
-<header>
-  <div class="bar">
-    <a class="brand" href="index.html" aria-label="AeroLay home">
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <rect width="32" height="32" rx="8" fill="#0d1f44" stroke="#22d3ee"/>
-        <path d="M5 18l22-9-7 15-4-6-5 3z" fill="#22d3ee"/>
-      </svg>
-      <span>Aero<b>Lay</b></span>
-    </a>
-    <nav aria-label="Dashboard sections">
-      <button class="nav-btn" data-view="flights" aria-current="page">Flights</button>
-      <button class="nav-btn" data-view="pickup">Pickup assistant</button>
-      <button class="nav-btn" data-view="weather">Weather</button>
-      <button class="nav-btn" data-view="airport">Airport guide</button>
-      <button class="nav-btn" data-view="alerts">Notifications <span class="badge" id="badge" hidden>0</span></button>
+<div class="shell" id="shell">
+  <aside class="side" id="side">
+    <div class="sb">
+      <svg class="lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+      <a class="bname" href="index.html" aria-label="AeroLay home">AeroLay</a>
+      <button class="col" id="col" aria-expanded="true" aria-label="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button>
+    </div>
+    <nav class="nav" aria-label="Dashboard sections">
+      <button class="nb" data-v="flights" aria-current="page"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="lbl">Dashboard</span></button>
+      <button class="nb" data-v="pickup"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></span><span class="lbl">Pickup assistant</span></button>
+      <button class="nb" data-v="airports"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 18H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19 11a3.5 3.5 0 0 1 0 7z"/></svg></span><span class="lbl">Weather &amp; airports</span></button>
+      <button class="nb" data-v="alerts"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 0 0-5-5.9V4a1 1 0 0 0-2 0v1.1A6 6 0 0 0 6 11v5l-2 2v1h16v-1z"/></svg></span><span class="lbl">Notifications</span><span class="bdg" id="bdg" hidden>0</span></button>
     </nav>
-  </div>
-  <div class="demo-strip" role="note">
-    <strong>Demo flight data:</strong> flight statuses, times, gates and terminals are examples, not live information. Weather is live only when explicitly labelled Live.
-  </div>
-</header>
-
-<main id="main" tabindex="-1">
-<section id="view-flights" aria-labelledby="h-flights">
-  <h1 id="h-flights">Flight dashboard</h1>
-  <p class="sub" id="dateline">Sample flight schedule. Not live airline data.</p>
-
-  <div class="stats" role="group" aria-label="Filter by flight status">
-    <button class="stat all" data-status="all" aria-pressed="true"><span class="n" id="s-all">0</span><span class="l">Total flights</span></button>
-    <button class="stat ok" data-status="ontime" aria-pressed="false"><span class="n" id="s-ontime">0</span><span class="l">On time</span></button>
-    <button class="stat warn" data-status="delayed" aria-pressed="false"><span class="n" id="s-delayed">0</span><span class="l">Delayed</span></button>
-    <button class="stat bad" data-status="cancelled" aria-pressed="false"><span class="n" id="s-cancelled">0</span><span class="l">Cancelled</span></button>
-  </div>
-
-  <div class="tools">
-    <div class="field">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <label class="sr" for="q">Search flights</label>
-      <input id="q" type="search" placeholder="Search flight, airline, city or airport" autocomplete="off">
+    <div class="helpc">
+      <svg class="wv" viewBox="0 0 200 140" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70C40 20 80 110 120 60S180 30 200 50V140H0z" fill="rgba(90,130,255,.45)"/><path d="M0 100C50 60 90 130 140 90S190 80 200 95V140H0z" fill="rgba(8,16,100,.65)"/></svg>
+      <div class="q" aria-hidden="true">?</div>
+      <strong>Need help?</strong><span class="s">Explore our help center</span>
+      <button class="hb" id="help">Help Center</button>
     </div>
-    <div class="field">
-      <label class="sr" for="airline">Filter by airline</label>
-      <select id="airline"><option value="all">All airlines</option></select>
+  </aside>
+  <div class="ov" id="ov"></div>
+
+  <div class="area">
+    <div class="mtop">
+      <button class="mbtn" id="mb" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <span class="mbrand">AeroLay</span>
+      <span class="demo" role="note">DEMO DATA · not live flights</span>
     </div>
-    <button class="btn" id="reset">Reset filters</button>
-  </div>
+    <main id="main" tabindex="-1">
+      <section id="v-flights" aria-labelledby="h-fl">
+        <div class="hero">
+          <svg viewBox="0 0 200 140" preserveAspectRatio="none" aria-hidden="true"><path d="M0 70C40 20 80 110 120 60S180 30 200 50V140H0z" fill="rgba(90,130,255,.5)"/><path d="M0 100C50 60 90 130 140 90S190 80 200 95V140H0z" fill="rgba(8,16,100,.55)"/></svg>
+          <h1 id="h-fl">Flight dashboard</h1>
+          <p id="dl">Sample schedule for today.</p>
+          <p class="sm" style="margin-top:6px">All flights below are demo data for design purposes. Do not use them for real travel decisions.</p>
+        </div>
+        <div class="stats" role="group" aria-label="Summary, select to filter">
+          <button class="stat" style="--c:#1d4ed8" data-s="all" aria-pressed="true"><span class="n" id="n-all">0</span>Total flights</button>
+          <button class="stat" style="--c:#15803d" data-s="ontime" aria-pressed="false"><span class="n" id="n-ontime">0</span>On time</button>
+          <button class="stat" style="--c:#b45309" data-s="delayed" aria-pressed="false"><span class="n" id="n-delayed">0</span>Delayed</button>
+          <button class="stat" style="--c:#b91c1c" data-s="cancelled" aria-pressed="false"><span class="n" id="n-cancelled">0</span>Cancelled</button>
+        </div>
+        <div class="tools">
+          <div class="fld"><label class="sr" for="q">Search flights</label><input id="q" type="search" placeholder="Search flight number, airline, city or code" autocomplete="off"></div>
+          <div class="fld"><label class="sr" for="al">Airline</label><select id="al"><option value="all">All airlines</option></select></div>
+          <button class="btn" id="rs">Reset filters</button>
+        </div>
+        <div class="chips" role="group" aria-label="Status filter">
+          <button class="chip" data-s="all" aria-pressed="true">All</button>
+          <button class="chip" data-s="ontime" aria-pressed="false">On time</button>
+          <button class="chip" data-s="delayed" aria-pressed="false">Delayed</button>
+          <button class="chip" data-s="cancelled" aria-pressed="false">Cancelled</button>
+          <span class="cnt" id="cnt" aria-live="polite"></span>
+        </div>
+        <div class="lay">
+          <div class="card tw">
+            <table>
+              <caption class="sr">Demo flights. Select a row for details.</caption>
+              <thead><tr><th scope="col">Flight</th><th scope="col">Airline</th><th scope="col">Origin</th><th scope="col">Destination</th><th scope="col"><button id="so" aria-label="Sort by departure, ascending">Departure ▲</button></th><th scope="col">Status</th></tr></thead>
+              <tbody id="tb"></tbody>
+            </table>
+            <div class="emp" id="em" hidden><p><strong>No flights match.</strong></p><p>Try another search or reset the filters.</p></div>
+          </div>
+          <aside class="card det" id="det" aria-live="polite"></aside>
+        </div>
+      </section>
 
-  <div class="chips" role="group" aria-label="Flight status filter">
-    <button class="chip" data-status="all" aria-pressed="true">All</button>
-    <button class="chip" data-status="ontime" aria-pressed="false">On time</button>
-    <button class="chip" data-status="delayed" aria-pressed="false">Delayed</button>
-    <button class="chip" data-status="cancelled" aria-pressed="false">Cancelled</button>
-    <span class="count" id="count" aria-live="polite"></span>
-  </div>
+      <section id="v-pickup" hidden aria-labelledby="h-pk">
+        <h1 id="h-pk">Passenger pickup assistant</h1>
+        <p class="mu" style="margin:6px 0 18px">Find out when to leave so you arrive as your passenger comes out. Uses demo times only.</p>
+        <div class="g2">
+          <div class="card pf"><h2>Trip details</h2>
+            <label>Arriving flight <select id="pf"></select></label>
+            <label>Your travel time to the airport (minutes) <input id="pt" type="number" min="5" max="300" value="30"></label>
+            <label>Time passengers need after landing (minutes)<small>Plane exit, immigration and baggage.</small><input id="pb" type="number" min="0" max="180" value="35"></label>
+          </div>
+          <div class="card"><h2>Your pickup plan</h2><div class="res" id="pr" aria-live="polite"></div>
+            <ul class="ck"><li><label><input type="checkbox"> Check the flight status again before leaving</label></li><li><label><input type="checkbox"> Share your car details</label></li><li><label><input type="checkbox"> Agree on a meeting point</label></li><li><label><input type="checkbox"> Check parking or drop-off rules</label></li></ul>
+            <button class="btn pri" id="pc">Copy message for passenger</button>
+          </div>
+        </div>
+      </section>
 
-  <div class="layout">
-    <div class="card twrap">
-      <table>
-        <caption class="sr">Sample flight list. Select a row to view details.</caption>
-        <thead><tr>
-          <th scope="col">Flight</th>
-          <th scope="col">Airline</th>
-          <th scope="col">Origin</th>
-          <th scope="col">Destination</th>
-          <th scope="col"><button id="sort" aria-label="Sort by departure time ascending">Departure ▲</button></th>
-          <th scope="col">Status</th>
-        </tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-      <div class="empty" id="empty" hidden>
-        <p><strong>No flights match.</strong></p>
-        <p>Try a different search or reset the filters.</p>
-      </div>
-    </div>
-    <aside class="card details" id="details" aria-labelledby="h-details" aria-live="polite"></aside>
-  </div>
-</section>
+      <section id="v-airports" hidden aria-labelledby="h-ap">
+        <h1 id="h-ap">Airport weather &amp; navigation</h1>
+        <p class="mu" style="margin:6px 0 16px">Weather is fetched live from Open-Meteo when available. Gates and terminals are demo values.</p>
+        <div class="fld" style="max-width:480px;margin-bottom:16px"><label class="sr" for="as">Choose an airport</label><select id="as"></select></div>
+        <div class="g2"><div class="card" id="a1"></div><div class="card" id="a2"></div></div>
+      </section>
 
-<section id="view-pickup" hidden aria-labelledby="h-pickup">
-  <h1 id="h-pickup">Passenger pickup assistant</h1>
-  <p class="sub">Estimate when to leave based on the sample flight schedule. Confirm actual arrival information before travelling.</p>
-  <div class="pgrid">
-    <div class="card pf">
-      <h2>Trip details</h2>
-      <label for="p-flight">Arriving flight
-        <select id="p-flight"></select>
-      </label>
-      <label for="p-travel">Your travel time to the airport (minutes)
-        <input id="p-travel" type="number" min="5" max="300" value="30">
-      </label>
-      <label for="p-buffer">Passenger exit and baggage time (minutes)
-        <small>Allow time for leaving the plane, immigration if applicable, and baggage.</small>
-        <input id="p-buffer" type="number" min="0" max="180" value="35">
-      </label>
-    </div>
-    <div class="card">
-      <h2>Your pickup plan</h2>
-      <div class="result" id="p-result" aria-live="polite"></div>
-      <ul class="check">
-        <li><label><input type="checkbox"> Confirm the actual flight status before leaving</label></li>
-        <li><label><input type="checkbox"> Share your car details with the passenger</label></li>
-        <li><label><input type="checkbox"> Agree on a meeting point</label></li>
-        <li><label><input type="checkbox"> Check airport parking and pickup rules</label></li>
-      </ul>
-      <button class="btn primary" id="p-copy">Copy passenger message</button>
-    </div>
+      <section id="v-alerts" hidden aria-labelledby="h-al">
+        <h1 id="h-al">Notifications</h1>
+        <p class="mu" style="margin-top:6px">Demo alerts from the sample flights. Follow a flight to add your own.</p>
+        <div class="row"><span id="ut" aria-live="polite"></span><div class="acts"><button class="btn" id="ma">Mark all as read</button><button class="btn" id="ca">Clear all</button></div></div>
+        <ul class="nl" id="nl"></ul>
+        <div class="card emp" id="ne" hidden><p><strong>You are all caught up.</strong></p><p>Follow a flight to get alerts here.</p></div>
+      </section>
+    </main>
+    <footer>AeroLay · demo flight data only · <a href="index.html">Back to AeroLay home</a></footer>
   </div>
-</section>
+</div>
 
-<section id="view-weather" hidden aria-labelledby="h-weather">
-  <h1 id="h-weather">Airport weather</h1>
-  <p class="sub" id="w-status" aria-live="polite">Weather has not loaded yet.</p>
-  <div class="row"><button class="btn primary" id="w-refresh">Refresh weather</button></div>
-  <div class="wgrid" id="w-grid"></div>
-</section>
-
-<section id="view-airport" hidden aria-labelledby="h-airport">
-  <h1 id="h-airport">Airport navigation guide</h1>
-  <p class="sub">General airport guidance. Sample gates and terminals are not verified airport information; always follow airport signs and screens.</p>
-  <div class="field" style="max-width:460px;margin-bottom:16px">
-    <label class="sr" for="a-sel">Choose an airport</label>
-    <select id="a-sel"></select>
-  </div>
-  <div class="pgrid">
-    <div class="card" id="a-flights"></div>
-    <div class="card" id="a-steps"></div>
-  </div>
-</section>
-
-<section id="view-alerts" hidden aria-labelledby="h-alerts">
-  <h1 id="h-alerts">Notifications</h1>
-  <p class="sub">Demo alerts generated from the sample flight list. These are not airline notifications.</p>
-  <div class="row">
-    <span id="unread-text" aria-live="polite"></span>
-    <div class="actions">
-      <button class="btn" id="markall">Mark all as read</button>
-      <button class="btn" id="clearall">Clear all</button>
-    </div>
-  </div>
-  <ul class="notes" id="notes"></ul>
-  <div class="empty card" id="notes-empty" hidden>
-    <p><strong>No notifications.</strong></p>
-    <p>Follow a flight from the dashboard to create a demo alert.</p>
-  </div>
-</section>
-</main>
-
-<footer>
-  <span>AeroLay · Sample flight data only. Not a live flight tracker.</span>
-  <a href="index.html">Back to AeroLay home</a>
-</footer>
+<dialog id="dlg" aria-labelledby="dh">
+  <h2 id="dh">Help Center</h2>
+  <ul>
+    <li>Search by flight number, airline, city or airport code, or use the status cards and chips to filter.</li>
+    <li>Select a flight row to open its details, then follow it to get a notification.</li>
+    <li>Use the Pickup assistant to work out when to leave for the airport.</li>
+    <li>Weather &amp; airports shows live weather and simple airport walking steps.</li>
+    <li>All flight data is demo data and is not live. Always confirm with your airline.</li>
+  </ul>
+  <button class="btn pri" id="dx">Close</button>
+</dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
 "use strict";
-
 var F=[
- ["6E 2143","IndiGo","HYD","Hyderabad","DEL","Delhi","06:15","08:35","ontime",0,"B12","T1","Airbus A320neo"],
- ["AI 544","Air India","DEL","Delhi","BOM","Mumbai","07:00","09:10","delayed",35,"A04","T3","Airbus A321"],
- ["QP 1405","Akasa Air","BLR","Bengaluru","HYD","Hyderabad","07:40","08:55","ontime",0,"C07","T1","Boeing 737 MAX 8"],
- ["SG 318","SpiceJet","RJA","Rajahmundry","HYD","Hyderabad","08:10","09:05","delayed",50,"G01","T1","Boeing 737-800"],
- ["6E 6402","IndiGo","VTZ","Visakhapatnam","BLR","Bengaluru","08:45","10:40","ontime",0,"G03","T1","Airbus A320neo"],
- ["AI 677","Air India","MAA","Chennai","DEL","Delhi","09:20","12:10","cancelled",0,"D02","T4","Airbus A320"],
- ["IX 1104","Air India Express","BLR","Bengaluru","COK","Kochi","09:55","11:05","ontime",0,"E15","T2","Boeing 737-800"],
- ["6E 5216","IndiGo","RJA","Rajahmundry","BLR","Bengaluru","10:30","12:10","ontime",0,"G02","T1","ATR 72-600"],
- ["QP 1122","Akasa Air","BOM","Mumbai","AMD","Ahmedabad","11:05","12:10","delayed",20,"F09","T2","Boeing 737 MAX 8"],
- ["SG 8157","SpiceJet","DEL","Delhi","GOI","Goa","11:50","14:30","ontime",0,"A11","T3","Boeing 737-800"],
- ["AI 2651","Air India","HYD","Hyderabad","VTZ","Visakhapatnam","12:25","13:35","delayed",75,"B06","T1","Airbus A320"],
- ["6E 7345","IndiGo","CCU","Kolkata","BOM","Mumbai","13:00","15:40","cancelled",0,"H03","T2","Airbus A321neo"],
- ["IX 2711","Air India Express","COK","Kochi","MAA","Chennai","13:45","14:50","ontime",0,"C02","T1","Boeing 737-800"],
- ["AI 811","Air India","BOM","Mumbai","BLR","Bengaluru","14:30","16:10","ontime",0,"F04","T2","Airbus A320neo"],
- ["QP 1708","Akasa Air","HYD","Hyderabad","BOM","Mumbai","15:15","16:35","delayed",25,"B09","T1","Boeing 737 MAX 8"],
- ["6E 1893","IndiGo","BLR","Bengaluru","RJA","Rajahmundry","16:05","17:35","ontime",0,"D08","T1","ATR 72-600"]
-].map(function(a,i){
-  return {id:i,num:a[0],airline:a[1],oc:a[2],oct:a[3],dc:a[4],dct:a[5],dep:a[6],arr:a[7],status:a[8],delay:a[9],gate:a[10],term:a[11],craft:a[12]};
-});
+["6E 2143","IndiGo","HYD","Hyderabad","DEL","Delhi","06:15","08:35","ontime",0,"B12","T1","Airbus A320neo"],
+["AI 544","Air India","DEL","Delhi","BOM","Mumbai","07:00","09:10","delayed",35,"A04","T3","Airbus A321"],
+["QP 1405","Akasa Air","BLR","Bengaluru","HYD","Hyderabad","07:40","08:55","ontime",0,"C07","T1","Boeing 737 MAX 8"],
+["SG 318","SpiceJet","RJA","Rajahmundry","HYD","Hyderabad","08:10","09:05","delayed",50,"G01","T1","Boeing 737-800"],
+["6E 6402","IndiGo","VTZ","Visakhapatnam","BLR","Bengaluru","08:45","10:40","ontime",0,"G03","T1","Airbus A320neo"],
+["AI 677","Air India","MAA","Chennai","DEL","Delhi","09:20","12:10","cancelled",0,"D02","T4","Airbus A320"],
+["IX 1104","Air India Express","BLR","Bengaluru","COK","Kochi","09:55","11:05","ontime",0,"E15","T2","Boeing 737-800"],
+["6E 5216","IndiGo","RJA","Rajahmundry","BLR","Bengaluru","10:30","12:10","ontime",0,"G02","T1","ATR 72-600"],
+["QP 1122","Akasa Air","BOM","Mumbai","AMD","Ahmedabad","11:05","12:10","delayed",20,"F09","T2","Boeing 737 MAX 8"],
+["AI 2651","Air India","HYD","Hyderabad","VTZ","Visakhapatnam","12:25","13:35","delayed",75,"B06","T1","Airbus A320"],
+["6E 7345","IndiGo","CCU","Kolkata","BOM","Mumbai","13:00","15:40","cancelled",0,"H03","T2","Airbus A321neo"],
+["IX 2711","Air India Express","COK","Kochi","MAA","Chennai","13:45","14:50","ontime",0,"C02","T1","Boeing 737-800"],
+["AI 811","Air India","BOM","Mumbai","BLR","Bengaluru","14:30","16:10","ontime",0,"F04","T2","Airbus A320neo"],
+["6E 1893","IndiGo","BLR","Bengaluru","RJA","Rajahmundry","16:05","17:35","ontime",0,"D08","T1","ATR 72-600"]
+].map(function(a,i){return{id:i,num:a[0],air:a[1],oc:a[2],ot:a[3],dc:a[4],dt:a[5],dep:a[6],arr:a[7],st:a[8],dly:a[9],gate:a[10],term:a[11],ac:a[12]}});
+var L={ontime:"On time",delayed:"Delayed",cancelled:"Cancelled"},C={ontime:"ok",delayed:"wn",cancelled:"bad"};
+var S={q:"",st:"all",al:"all",asc:true,sel:null,fol:{},notes:[]};
+var $=function(s){return document.querySelector(s)},$$=function(s){return[].slice.call(document.querySelectorAll(s))};
+function mi(t){var p=t.split(":");return+p[0]*60+ +p[1]}
+function hm(x){x=(x%1440+1440)%1440;return String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0")}
+function es(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function pill(f){return '<span class="pill '+C[f.st]+'">'+L[f.st]+(f.st==="delayed"?" +"+f.dly+" min":"")+'</span>'}
+var tt;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("show")},2600)}
 
-var LABEL={ontime:"On time",delayed:"Delayed",cancelled:"Cancelled"};
-var CLS={ontime:"ok",delayed:"warn",cancelled:"bad"};
-var S={q:"",status:"all",airline:"all",asc:true,sel:null,followed:{},notes:[]};
-var $=function(s){return document.querySelector(s);};
-var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
-var W={};
-var weatherLoading=false;
-var toastTimer=null;
-var pickupText="";
-
-function mins(t){
-  var p=t.split(":");
-  return Number(p[0])*60+Number(p[1]);
-}
-function hhmm(m){
-  m=((m%1440)+1440)%1440;
-  return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
-}
-function esc(s){
-  return String(s).replace(/[&<>"']/g,function(c){
-    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
-  });
-}
-function byId(id){return F[id];}
-function toast(message){
-  var el=$("#toast");
-  el.textContent=message;
-  el.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer=setTimeout(function(){el.classList.remove("show");},2600);
-}
-function pill(f){
-  return '<span class="pill '+CLS[f.status]+'">'+LABEL[f.status]+
-    (f.status==="delayed"?" +"+f.delay+" min":"")+'</span>';
-}
-
-/* Flight search, filtering and sorting */
-function filtered(){
+function list(){
   var q=S.q.trim().toLowerCase();
-  var rows=F.filter(function(f){
-    if(S.status!=="all"&&f.status!==S.status)return false;
-    if(S.airline!=="all"&&f.airline!==S.airline)return false;
-    if(!q)return true;
-    return [f.num,f.num.replace(/\s/g,""),f.airline,f.oc,f.oct,f.dc,f.dct]
-      .join(" ").toLowerCase().indexOf(q)>-1;
-  });
-  rows.sort(function(a,b){
-    return (mins(a.dep)-mins(b.dep))*(S.asc?1:-1);
-  });
-  return rows;
+  return F.filter(function(f){
+    if(S.st!=="all"&&f.st!==S.st)return false;
+    if(S.al!=="all"&&f.air!==S.al)return false;
+    return !q||[f.num,f.num.replace(" ",""),f.air,f.oc,f.ot,f.dc,f.dt].join(" ").toLowerCase().indexOf(q)>-1;
+  }).sort(function(a,b){return(mi(a.dep)-mi(b.dep))*(S.asc?1:-1)});
 }
 function render(){
-  var rows=filtered();
-  if(S.sel!==null&&!rows.some(function(f){return f.id===S.sel;}))S.sel=null;
-
-  $("#tbody").innerHTML=rows.map(function(f){
-    return '<tr tabindex="0" data-id="'+f.id+'" aria-selected="'+(S.sel===f.id)+'">'+
-      '<td class="fn" data-label="Flight">'+esc(f.num)+'</td>'+
-      '<td data-label="Airline">'+esc(f.airline)+'</td>'+
-      '<td data-label="Origin"><span><span class="code">'+f.oc+'</span><span class="city">'+esc(f.oct)+'</span></span></td>'+
-      '<td data-label="Destination"><span><span class="code">'+f.dc+'</span><span class="city">'+esc(f.dct)+'</span></span></td>'+
-      '<td data-label="Departure">'+f.dep+'</td>'+
-      '<td data-label="Status">'+pill(f)+'</td></tr>';
+  var r=list();
+  $("#tb").innerHTML=r.map(function(f){
+    return '<tr tabindex="0" data-id="'+f.id+'" aria-selected="'+(S.sel===f.id)+'">'
+    +'<td class="fn" data-l="Flight">'+es(f.num)+'</td><td data-l="Airline">'+es(f.air)+'</td>'
+    +'<td data-l="Origin"><span><span class="cd">'+f.oc+'</span><span class="ct">'+es(f.ot)+'</span></span></td>'
+    +'<td data-l="Destination"><span><span class="cd">'+f.dc+'</span><span class="ct">'+es(f.dt)+'</span></span></td>'
+    +'<td data-l="Departure">'+f.dep+'</td><td data-l="Status">'+pill(f)+'</td></tr>';
   }).join("");
-
-  $("#empty").hidden=rows.length!==0;
-  $("#count").textContent="Showing "+rows.length+" of "+F.length+" demo flights";
-  renderDetails();
-  syncButtons();
+  $("#em").hidden=r.length>0;
+  $("#cnt").textContent="Showing "+r.length+" of "+F.length+" demo flights";
+  if(S.sel!==null&&!r.some(function(f){return f.id===S.sel}))S.sel=null;
+  details();
+  $$("[data-s]").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.s===S.st))});
+  $("#so").textContent="Departure "+(S.asc?"▲":"▼");
+  $("#so").setAttribute("aria-label","Sort by departure, "+(S.asc?"ascending":"descending"));
 }
-function syncButtons(){
-  $$("[data-status]").forEach(function(b){
-    b.setAttribute("aria-pressed",String(b.dataset.status===S.status));
-  });
-  $("#sort").textContent="Departure "+(S.asc?"▲":"▼");
-  $("#sort").setAttribute("aria-label","Sort by departure time "+(S.asc?"ascending":"descending"));
-}
-function renderStats(){
-  $("#s-all").textContent=F.length;
-  ["ontime","delayed","cancelled"].forEach(function(k){
-    $("#s-"+k).textContent=F.filter(function(f){return f.status===k;}).length;
-  });
-}
-function renderDetails(){
-  var panel=$("#details");
-  if(S.sel===null){
-    panel.innerHTML='<h2 id="h-details">Flight details</h2><p class="sub" style="margin:0">Select a flight to see its sample gate, terminal, aircraft and timings.</p>';
-    return;
-  }
-
-  var f=byId(S.sel);
-  var delayed=f.status==="delayed";
-  var newDep=delayed?hhmm(mins(f.dep)+f.delay):f.dep;
-  var newArr=delayed?hhmm(mins(f.arr)+f.delay):f.arr;
-  var duration=(mins(f.arr)-mins(f.dep)+1440)%1440;
-  var following=!!S.followed[f.id];
-
-  panel.innerHTML='<div class="fade">'+
-    '<h2 id="h-details">'+esc(f.num)+' · '+esc(f.airline)+'</h2>'+pill(f)+
-    '<div class="route"><div><div class="big">'+f.oc+'</div><small class="city">'+esc(f.oct)+'</small></div><div class="line" aria-hidden="true"></div><div style="text-align:right"><div class="big">'+f.dc+'</div><small class="city">'+esc(f.dct)+'</small></div></div>'+
-    '<dl class="dl">'+
-    '<div><dt>Scheduled departure</dt><dd>'+f.dep+'</dd></div>'+
-    '<div><dt>Expected departure</dt><dd>'+(f.status==="cancelled"?"Cancelled":newDep)+'</dd></div>'+
-    '<div><dt>Scheduled arrival</dt><dd>'+f.arr+'</dd></div>'+
-    '<div><dt>Expected arrival</dt><dd>'+(f.status==="cancelled"?"Cancelled":newArr)+'</dd></div>'+
-    '<div><dt>Sample gate</dt><dd>'+f.gate+'</dd></div>'+
-    '<div><dt>Sample terminal</dt><dd>'+f.term+'</dd></div>'+
-    '<div><dt>Sample aircraft</dt><dd>'+esc(f.craft)+'</dd></div>'+
-    '<div><dt>Scheduled flight time</dt><dd>'+Math.floor(duration/60)+'h '+(duration%60)+'m</dd></div>'+
-    '</dl><div class="actions">'+
-    '<button class="btn primary" id="d-follow" aria-pressed="'+following+'">'+(following?"Following flight":"Follow this flight")+'</button>'+
-    '<button class="btn" id="d-pickup">Plan pickup</button></div>'+
-    '<p class="small-note">All flight information above is sample data, not live airline information.</p></div>';
-
-  $("#d-follow").addEventListener("click",function(){
-    if(S.followed[f.id]){
-      delete S.followed[f.id];
-      toast("Stopped following "+f.num);
-    }else{
-      S.followed[f.id]=true;
-      addNote("info","You are following "+f.num+" ("+f.oc+" to "+f.dc+"). Sample status: "+LABEL[f.status]+".");
-      toast("Following "+f.num);
-    }
-    renderDetails();
-  });
-  $("#d-pickup").addEventListener("click",function(){
-    $("#p-flight").value=String(f.id);
-    view("pickup");
-    calcPickup();
-  });
-}
-function selectFlight(id){
-  S.sel=id;
-  render();
-  var row=document.querySelector('tr[data-id="'+id+'"]');
-  if(row&&window.innerWidth<1024){
-    $("#details").scrollIntoView({behavior:"smooth",block:"nearest"});
-  }
-}
-
-/* Notifications */
-function addNote(type,message){
-  S.notes.unshift({id:String(Date.now())+String(Math.random()),type:type,text:message,time:"Just now",read:false});
-  renderNotes();
-}
-function seedNotes(){
-  F.forEach(function(f){
-    if(f.status==="delayed"){
-      S.notes.push({id:"d"+f.id,type:"warn",text:f.num+" ("+f.oc+" to "+f.dc+") is delayed by "+f.delay+" minutes in the sample data. Example departure: "+hhmm(mins(f.dep)+f.delay)+".",time:"Demo alert",read:false});
-    }
-    if(f.status==="cancelled"){
-      S.notes.push({id:"c"+f.id,type:"bad",text:f.num+" ("+f.oc+" to "+f.dc+") is cancelled in the sample data. Check with the airline for actual information.",time:"Demo alert",read:false});
-    }
-  });
-}
-function renderNotes(){
-  var list=S.notes;
-  var unread=list.filter(function(n){return !n.read;}).length;
-  var icons={warn:"!",bad:"×",info:"i"};
-
-  $("#notes").innerHTML=list.map(function(n){
-    return '<li class="note '+(n.read?"":"unread")+'">'+
-      '<span class="ic '+n.type+'" aria-hidden="true">'+icons[n.type]+'</span>'+
-      '<p>'+esc(n.text)+'<br><small>'+esc(n.time)+(n.read?"":" · Unread")+'</small></p>'+
-      '<button class="btn" data-read="'+esc(n.id)+'" '+(n.read?"disabled":"")+' aria-label="Mark notification as read">Read</button>'+
-      '<button class="btn" data-del="'+esc(n.id)+'" aria-label="Dismiss notification">Dismiss</button></li>';
-  }).join("");
-
-  $("#notes-empty").hidden=list.length!==0;
-  $("#unread-text").textContent=unread+" unread of "+list.length;
-  $("#badge").textContent=unread;
-  $("#badge").hidden=unread===0;
-}
-
-/* Pickup assistant */
-function fillPickup(){
-  $("#p-flight").innerHTML=F.map(function(f){
-    return '<option value="'+f.id+'">'+esc(f.num)+' · '+esc(f.oct)+' to '+esc(f.dct)+' · lands '+f.arr+(f.status==="cancelled"?" (cancelled sample)":"")+'</option>';
-  }).join("");
-  $("#p-flight").value="3";
-}
-function calcPickup(){
-  var f=byId(Number($("#p-flight").value));
-  var result=$("#p-result");
-  var travel=Number($("#p-travel").value);
-  var buffer=Number($("#p-buffer").value);
-
-  if(!f){
-    result.className="result bad";
-    result.textContent="Choose a flight to create a pickup plan.";
-    pickupText="";
-    return;
-  }
-  if(!Number.isFinite(travel)||travel<5||travel>300){
-    result.className="result bad";
-    result.textContent="Enter a travel time between 5 and 300 minutes.";
-    pickupText="";
-    return;
-  }
-  if(!Number.isFinite(buffer)||buffer<0||buffer>180){
-    result.className="result bad";
-    result.textContent="Enter a passenger exit time between 0 and 180 minutes.";
-    pickupText="";
-    return;
-  }
-  if(f.status==="cancelled"){
-    result.className="result bad";
-    result.innerHTML="<p><strong>"+esc(f.num)+" is cancelled in the sample data.</strong></p><p>Do not use this sample schedule to plan a real journey. Check the airline's official status.</p>";
-    pickupText="";
-    return;
-  }
-
-  var landing=mins(f.arr)+(f.status==="delayed"?f.delay:0);
-  var ready=landing+buffer;
-  var leave=ready-travel;
-
-  result.className="result";
-  result.innerHTML="<p>Estimated time to leave</p><p class=\"t\">"+hhmm(leave)+"</p>"+
-    "<p>Sample expected landing: "+hhmm(landing)+" at "+f.dc+" ("+esc(f.dct)+").</p>"+
-    "<p>Estimated passenger ready time: "+hhmm(ready)+".</p>"+
-    (f.status==="delayed"?"<p>Includes the sample delay of "+f.delay+" minutes.</p>":"")+
-    "<p class=\"small-note\">Calculation only. Actual flight and road conditions may differ.</p>";
-
-  pickupText="Hi! Your flight "+f.num+" has a sample expected landing time of "+hhmm(landing)+". I plan to reach the airport around "+hhmm(ready)+". Please message me when you land. These times are estimates, not live flight information.";
-}
-
-/* Views and airport data */
-var AP={
- HYD:["Rajiv Gandhi International Airport, Hyderabad",17.2403,78.4294],
- DEL:["Indira Gandhi International Airport, Delhi",28.5562,77.1000],
- BOM:["Chhatrapati Shivaji Maharaj International Airport, Mumbai",19.0896,72.8656],
- BLR:["Kempegowda International Airport, Bengaluru",13.1986,77.7066],
- VTZ:["Visakhapatnam Airport",17.7212,83.2245],
- MAA:["Chennai International Airport",12.9941,80.1709],
- COK:["Cochin International Airport, Kochi",10.1520,76.4019],
- RJA:["Rajahmundry Airport",17.1104,81.8182],
- AMD:["Sardar Vallabhbhai Patel International Airport, Ahmedabad",23.0772,72.6347],
- GOI:["Goa (Dabolim) Airport",15.3808,73.8314],
- CCU:["Netaji Subhas Chandra Bose International Airport, Kolkata",22.6547,88.4467]
-};
-
-function view(name){
-  ["flights","pickup","weather","airport","alerts"].forEach(function(v){
-    $("#view-"+v).hidden=v!==name;
-  });
-  $$(".nav-btn").forEach(function(b){
-    if(b.dataset.view===name)b.setAttribute("aria-current","page");
-    else b.removeAttribute("aria-current");
-  });
-  window.scrollTo({top:0,behavior:"auto"});
-  if(name==="pickup")calcPickup();
-  if(name==="weather")loadWeather(false);
-  if(name==="airport")renderAirport();
-}
-
-/* Weather descriptions use Open-Meteo WMO weather codes */
-function weatherDescription(code){
-  var map={
-    0:"Clear sky",
-    1:"Mainly clear",
-    2:"Partly cloudy",
-    3:"Overcast",
-    45:"Fog",
-    48:"Depositing rime fog",
-    51:"Light drizzle",
-    53:"Moderate drizzle",
-    55:"Dense drizzle",
-    56:"Light freezing drizzle",
-    57:"Dense freezing drizzle",
-    61:"Light rain",
-    63:"Moderate rain",
-    65:"Heavy rain",
-    66:"Light freezing rain",
-    67:"Heavy freezing rain",
-    71:"Light snow",
-    73:"Moderate snow",
-    75:"Heavy snow",
-    77:"Snow grains",
-    80:"Slight rain showers",
-    81:"Moderate rain showers",
-    82:"Violent rain showers",
-    85:"Slight snow showers",
-    86:"Heavy snow showers",
-    95:"Thunderstorm",
-    96:"Thunderstorm with slight hail",
-    99:"Thunderstorm with heavy hail"
+function details(){
+  var d=$("#det");
+  if(S.sel===null){d.innerHTML='<h2>Flight details</h2><p class="mu">Select a flight to see its gate, terminal, aircraft and timings.</p>';return}
+  var f=F[S.sel],c=f.st==="cancelled",nd=f.st==="delayed"?hm(mi(f.dep)+f.dly):f.dep,na=f.st==="delayed"?hm(mi(f.arr)+f.dly):f.arr,du=mi(f.arr)-mi(f.dep),fo=!!S.fol[f.id];
+  d.innerHTML='<div class="fade"><h2>'+es(f.num)+' · '+es(f.air)+'</h2>'+pill(f)
+  +'<div class="rt"><div><div class="big">'+f.oc+'</div><span class="ct">'+es(f.ot)+'</span></div><div class="ln"></div><div style="text-align:right"><div class="big">'+f.dc+'</div><span class="ct">'+es(f.dt)+'</span></div></div>'
+  +'<dl class="dl"><div><dt>Scheduled departure</dt><dd>'+f.dep+'</dd></div><div><dt>Expected departure</dt><dd>'+(c?"Cancelled":nd)+'</dd></div>'
+  +'<div><dt>Scheduled arrival</dt><dd>'+f.arr+'</dd></div><div><dt>Expected arrival</dt><dd>'+(c?"Cancelled":na)+'</dd></div>'
+  +'<div><dt>Gate</dt><dd>'+f.gate+'</dd></div><div><dt>Terminal</dt><dd>'+f.term+'</dd></div>'
+  +'<div><dt>Aircraft</dt><dd>'+es(f.ac)+'</dd></div><div><dt>Flight time</dt><dd>'+Math.floor(du/60)+"h "+du%60+'m</dd></div></dl>'
+  +'<div class="acts"><button class="btn pri" id="dfo" aria-pressed="'+fo+'">'+(fo?"Following ✓":"Follow this flight")+'</button><button class="btn" id="dpk">Plan pickup</button></div>'
+  +'<p class="mu sm" style="margin-top:12px">Demo data. Not a live flight record.</p></div>';
+  $("#dfo").onclick=function(){
+    if(S.fol[f.id]){delete S.fol[f.id];toast("Stopped following "+f.num)}
+    else{S.fol[f.id]=1;addNote("info","You are now following "+f.num+" ("+f.oc+" to "+f.dc+"). Status: "+L[f.st]+".");toast("Following "+f.num)}
+    details();
   };
-  return Object.prototype.hasOwnProperty.call(map,code)?map[code]:"Unknown conditions";
+  $("#dpk").onclick=function(){$("#pf").value=f.id;view("pickup")};
 }
-function renderWeather(){
-  var keys=Object.keys(AP);
-  var liveCount=keys.filter(function(k){return W[k]&&W[k].live;}).length;
-  var loadingCount=keys.filter(function(k){return W[k]&&W[k].loading;}).length;
+function pick(id){S.sel=id;render();if(window.innerWidth<1024)$("#det").scrollIntoView({behavior:"smooth",block:"nearest"})}
 
-  $("#w-grid").innerHTML=keys.map(function(k){
-    var w=W[k];
-    var ready=!!(w&&w.live);
-    var temperature=ready?Math.round(w.t)+"°C":"—";
-    var wind=ready?Math.round(w.w)+" km/h":"—";
-    var condition=ready?w.c:(w&&w.error?"Weather unavailable":"Not loaded");
-    return '<article class="card wcard fade">'+
-      '<strong>'+k+'</strong>'+
-      '<div class="city">'+esc(AP[k][0])+'</div>'+
-      '<div class="temp">'+temperature+'</div>'+
-      '<div>'+esc(condition)+'</div>'+
-      '<div class="city">Wind: '+wind+'</div>'+
-      '<span class="tag '+(ready?"live":"offline")+'">'+(ready?"Live weather":"Unavailable")+'</span>'+
-      '</article>';
-  }).join("");
-
-  if(loadingCount){
-    $("#w-status").textContent="Loading current weather. Some airports may take longer to respond.";
-  }else if(liveCount===keys.length){
-    $("#w-status").textContent="Live weather loaded for all listed airports. Weather may change; check official airport and airline updates.";
-  }else if(liveCount>0){
-    $("#w-status").textContent="Live weather available for "+liveCount+" of "+keys.length+" airports. Unavailable airports are not showing invented weather values.";
-  }else{
-    $("#w-status").textContent="Weather service could not be reached. Check your internet connection and refresh. No fake weather values are shown.";
-  }
+function addNote(t,x){S.notes.unshift({id:Date.now()+Math.random(),t:t,x:x,time:"Just now",rd:false});notes()}
+function seed(){F.forEach(function(f){
+  if(f.st==="delayed")S.notes.push({id:"d"+f.id,t:"warn",x:f.num+" ("+f.oc+" to "+f.dc+") is delayed by "+f.dly+" minutes. New departure "+hm(mi(f.dep)+f.dly)+".",time:"Demo alert",rd:false});
+  if(f.st==="cancelled")S.notes.push({id:"c"+f.id,t:"bad",x:f.num+" ("+f.oc+" to "+f.dc+") is cancelled. Contact the airline to rebook.",time:"Demo alert",rd:false});
+})}
+function notes(){
+  var n=S.notes,u=n.filter(function(x){return!x.rd}).length,ic={warn:"!",bad:"✕",info:"i"};
+  $("#nl").innerHTML=n.map(function(x){return '<li class="nt'+(x.rd?"":" un")+'"><span class="ic '+x.t+'" aria-hidden="true">'+ic[x.t]+'</span><p>'+es(x.x)+'<br><small class="mu">'+x.time+(x.rd?"":" · Unread")+'</small></p>'
+    +'<button class="btn" data-r="'+x.id+'"'+(x.rd?" disabled":"")+'>Mark read</button><button class="btn" data-x="'+x.id+'" aria-label="Dismiss notification">Dismiss</button></li>'}).join("");
+  $("#ne").hidden=n.length>0;$("#ut").textContent=u+" unread of "+n.length;
+  var b=$("#bdg");b.textContent=u;b.hidden=u===0;
 }
-function loadWeather(force){
-  var keys=Object.keys(AP);
-  if(weatherLoading)return;
-  if(!force&&keys.every(function(k){return W[k]&&!W[k].error;})){
-    renderWeather();
-    return;
-  }
 
-  weatherLoading=true;
-  keys.forEach(function(k){W[k]={loading:true};});
-  renderWeather();
-
-  Promise.all(keys.map(function(k){
-    var a=AP[k];
-    var url="https://api.open-meteo.com/v1/forecast?latitude="+a[1]+
-      "&longitude="+a[2]+"&current=temperature_2m,wind_speed_10m,weather_code&timezone=auto";
-
-    return fetch(url)
-      .then(function(response){
-        if(!response.ok)throw new Error("Weather request failed");
-        return response.json();
-      })
-      .then(function(data){
-        if(!data.current||
-          typeof data.current.temperature_2m!=="number"||
-          typeof data.current.wind_speed_10m!=="number"||
-          typeof data.current.weather_code!=="number"){
-          throw new Error("Weather data is incomplete");
-        }
-        W[k]={
-          t:data.current.temperature_2m,
-          w:data.current.wind_speed_10m,
-          c:weatherDescription(data.current.weather_code),
-          live:true,
-          time:data.current.time||""
-        };
-      })
-      .catch(function(){
-        W[k]={live:false,error:true};
-      });
-  })).then(function(){
-    weatherLoading=false;
-    renderWeather();
-    if(!$("#view-airport").hidden)renderAirport();
-  }).catch(function(){
-    weatherLoading=false;
-    renderWeather();
-  });
+var pt="";
+function calc(){
+  var f=F[+$("#pf").value],el=$("#pr"),tr=+$("#pt").value||0,bf=+$("#pb").value||0;
+  if(f.st==="cancelled"){el.className="res bad";el.innerHTML='<p><strong>'+f.num+' is cancelled (demo).</strong></p><p>Check with the passenger and the airline first.</p>';pt="";return}
+  var la=mi(f.arr)+(f.st==="delayed"?f.dly:0),rd=la+bf,lv=rd-tr;
+  el.className="res";
+  el.innerHTML='<p>Leave by</p><p class="t">'+hm(lv)+'</p><p>Expected landing '+hm(la)+' at '+f.dc+' ('+es(f.dt)+'), Terminal '+f.term+'. Passenger ready around '+hm(rd)+'.'+(f.st==="delayed"?" Includes a "+f.dly+" minute delay.":"")+'</p>';
+  pt="Hi! Your flight "+f.num+" is expected to land at "+hm(la)+" (demo times). I will be at Terminal "+f.term+" around "+hm(rd)+". Message me when you land.";
 }
-function weatherSummary(k){
-  var w=W[k];
-  if(!w||!w.live)return "Live weather is currently unavailable.";
-  return Math.round(w.t)+"°C, "+w.c+", wind "+Math.round(w.w)+" km/h.";
-}
-function renderAirport(){
-  var k=$("#a-sel").value;
+
+var AP={HYD:["Rajiv Gandhi International Airport, Hyderabad",17.2403,78.4294],DEL:["Indira Gandhi International Airport, Delhi",28.5562,77.1],BOM:["Chhatrapati Shivaji Maharaj International Airport, Mumbai",19.0896,72.8656],BLR:["Kempegowda International Airport, Bengaluru",13.1986,77.7066],VTZ:["Visakhapatnam Airport",17.7212,83.2245],MAA:["Chennai International Airport",12.9941,80.1709],COK:["Cochin International Airport, Kochi",10.152,76.4019],RJA:["Rajahmundry Airport",17.1104,81.8182],AMD:["Sardar Vallabhbhai Patel International Airport, Ahmedabad",23.0772,72.6347],CCU:["Netaji Subhas Chandra Bose International Airport, Kolkata",22.6547,88.4467]};
+var W={};
+function wc(c){if(c===0)return"Clear sky";if(c<=3)return"Partly cloudy";if(c<=48)return"Fog";if(c<=57)return"Drizzle";if(c<=67)return"Rain";if(c<=77)return"Snow";if(c<=82)return"Rain showers";if(c>=95)return"Thunderstorm";return"Mixed conditions"}
+function wx(k){
+  if(W[k])return Promise.resolve(W[k]);
   var a=AP[k];
-  if(!a)return;
-
-  var related=F.filter(function(f){return f.oc===k||f.dc===k;})
-    .sort(function(x,y){return mins(x.dep)-mins(y.dep);});
-
-  $("#a-flights").innerHTML='<h2>'+k+' · '+esc(a[0])+'</h2>'+
-    '<p>'+esc(weatherSummary(k))+'</p>'+
-    '<h2 style="margin-top:16px">Sample flights here</h2><ul class="plain">'+
-    (related.map(function(f){
-      var departure=f.oc===k;
-      return '<li><strong>'+esc(f.num)+'</strong> '+(departure?'departs to '+f.dc+' at '+f.dep:'arrives from '+f.oc+' at '+f.arr)+
-        '<br><small class="city">Sample terminal '+f.term+', gate '+f.gate+' · '+LABEL[f.status]+
-        (f.status==="delayed"?" +"+f.delay+" min":"")+'</small></li>';
-    }).join("")||"<li>No sample flights at this airport.</li>")+
-    '</ul><p class="small-note">Flight times, gates and terminals are examples only.</p>';
-
-  $("#a-steps").innerHTML=
-    '<h2>Departure guide</h2><ol class="steps">'+
-    '<li>Enter the correct terminal and check your airline on the airport departures screens.</li>'+
-    '<li>Complete check-in and baggage drop if needed.</li>'+
-    '<li>Pass through security screening.</li>'+
-    '<li>Check the airport screens for your actual gate and boarding time.</li>'+
-    '</ol><h2>Arrival guide</h2><ol class="steps">'+
-    '<li>Follow airport signs to Arrivals and Baggage Claim.</li>'+
-    '<li>Check the baggage screens for your belt number.</li>'+
-    '<li>Follow signs for the official pickup area, taxi rank or other transport.</li>'+
-    '</ol><a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a[0])+'">Open in Google Maps</a>'+
-    '<p class="small-note">This is general guidance, not indoor turn-by-turn navigation. Follow airport signs and staff instructions.</p>';
+  return fetch("https://api.open-meteo.com/v1/forecast?latitude="+a[1]+"&longitude="+a[2]+"&current=temperature_2m,wind_speed_10m,weather_code")
+   .then(function(r){if(!r.ok)throw 0;return r.json()})
+   .then(function(j){return W[k]={t:Math.round(j.current.temperature_2m),w:Math.round(j.current.wind_speed_10m),c:wc(j.current.weather_code),live:true}})
+   .catch(function(){return{t:30,w:10,c:"Partly cloudy",live:false}});
+}
+function airport(){
+  var k=$("#as").value,a=AP[k];
+  var rel=F.filter(function(f){return f.oc===k||f.dc===k}).sort(function(x,y){return mi(x.dep)-mi(y.dep)});
+  $("#a1").innerHTML='<h2>'+k+' · '+es(a[0])+'</h2><div class="wx" id="wx"><span class="mu">Loading weather…</span></div>'
+   +'<h2>Demo flights here</h2><ul class="pl">'+(rel.map(function(f){return '<li><strong>'+es(f.num)+'</strong> '+(f.oc===k?'departs to '+f.dc+' at '+f.dep:'arrives from '+f.oc+' at '+f.arr)+'<br><small class="mu">Terminal '+f.term+', Gate '+f.gate+' · '+L[f.st]+(f.st==="delayed"?" +"+f.dly+" min":"")+'</small></li>'}).join("")||"<li>No demo flights here.</li>")+'</ul>'
+   +'<p class="mu sm" style="margin-top:10px">Gates and terminals are demo values.</p>';
+  $("#a2").innerHTML='<h2>Departing</h2><ol class="st"><li>Go to the terminal shown for your flight and find your airline on the departures screen.</li><li>Check in or drop bags at the airline counter if needed.</li><li>Pass security screening.</li><li>Check the screens for your gate and walk there. Confirm boarding times with your airline.</li></ol>'
+   +'<h2>Arriving</h2><ol class="st"><li>Follow signs for Arrivals and Baggage Claim.</li><li>Check the baggage screens for your belt number.</li><li>Exit through customs if required, then follow signs to taxis or the pickup point.</li></ol>'
+   +'<a class="btn pri" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a[0])+'">Open in Google Maps</a>'
+   +'<p class="mu sm" style="margin-top:10px">General guidance only. Follow the airport\'s signs and staff.</p>';
+  wx(k).then(function(w){var el=$("#wx");if(!el||$("#as").value!==k)return;
+    el.innerHTML='<span class="t">'+w.t+'°C</span><span>'+es(w.c)+'<br><small class="mu">Wind '+w.w+' km/h · '+(w.live?"Live, Open-Meteo":"Demo value (service unreachable)")+'</small></span>'});
 }
 
-/* Initialise */
+var shell=$("#shell");
+function drawer(o){shell.classList.toggle("open",o);$("#mb").setAttribute("aria-expanded",String(o));if(o)$(".nb").focus()}
+function view(v){
+  ["flights","pickup","airports","alerts"].forEach(function(k){$("#v-"+k).hidden=k!==v});
+  $$(".nb").forEach(function(b){if(b.dataset.v===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  drawer(false);window.scrollTo({top:0});
+  if(v==="pickup")calc();if(v==="airports")airport();
+}
+
 function init(){
-  var airlines=Array.from(new Set(F.map(function(f){return f.airline;}))).sort();
-  $("#airline").innerHTML+='<option value="all">All airlines</option>';
-  $("#airline").innerHTML= '<option value="all">All airlines</option>'+
-    airlines.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>';}).join("");
-
-  $("#a-sel").innerHTML=Object.keys(AP).map(function(k){
-    return '<option value="'+k+'">'+k+' · '+esc(AP[k][0])+'</option>';
-  }).join("");
-
-  $("#dateline").textContent="Sample schedule for "+new Date().toLocaleDateString(undefined,{
-    weekday:"long",day:"numeric",month:"long",year:"numeric"
-  })+". These are not live flights.";
-
-  fillPickup();
-  seedNotes();
-  renderStats();
-  renderNotes();
-  render();
-
-  $("#q").addEventListener("input",function(e){S.q=e.target.value;render();});
-  $("#airline").addEventListener("change",function(e){S.airline=e.target.value;render();});
-  $("#sort").addEventListener("click",function(){S.asc=!S.asc;render();});
-
-  $("#reset").addEventListener("click",function(){
-    S.q="";S.status="all";S.airline="all";S.sel=null;
-    $("#q").value="";
-    $("#airline").value="all";
-    render();
-    toast("Filters reset");
+  $("#al").innerHTML+=Array.from(new Set(F.map(function(f){return f.air}))).sort().map(function(a){return'<option>'+es(a)+'</option>'}).join("");
+  $("#dl").textContent="Sample schedule for "+new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"})+". Select a flight for details.";
+  ["all","ontime","delayed","cancelled"].forEach(function(k){$("#n-"+k).textContent=k==="all"?F.length:F.filter(function(f){return f.st===k}).length});
+  $("#pf").innerHTML=F.map(function(f){return'<option value="'+f.id+'">'+f.num+" · "+es(f.ot)+" to "+es(f.dt)+" · lands "+f.arr+(f.st==="cancelled"?" (cancelled)":"")+'</option>'}).join("");$("#pf").value=3;
+  $("#as").innerHTML=Object.keys(AP).map(function(k){return'<option value="'+k+'">'+k+" · "+es(AP[k][0])+'</option>'}).join("");
+  seed();notes();render();
+  $("#q").addEventListener("input",function(e){S.q=e.target.value;render()});
+  $("#al").addEventListener("change",function(e){S.al=e.target.value;render()});
+  $("#so").addEventListener("click",function(){S.asc=!S.asc;render()});
+  $("#rs").addEventListener("click",function(){S.q="";S.st="all";S.al="all";S.sel=null;$("#q").value="";$("#al").value="all";render();toast("Filters reset")});
+  $$("[data-s]").forEach(function(b){b.addEventListener("click",function(){S.st=b.dataset.s;render()})});
+  $("#tb").addEventListener("click",function(e){var t=e.target.closest("tr");if(t)pick(+t.dataset.id)});
+  $("#tb").addEventListener("keydown",function(e){var t=e.target.closest("tr");if(!t)return;
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(+t.dataset.id);var r=$('tr[data-id="'+t.dataset.id+'"]');if(r)r.focus()}
+    if(e.key==="ArrowDown"&&t.nextElementSibling){e.preventDefault();t.nextElementSibling.focus()}
+    if(e.key==="ArrowUp"&&t.previousElementSibling){e.preventDefault();t.previousElementSibling.focus()}});
+  $$(".nb").forEach(function(b){b.addEventListener("click",function(){view(b.dataset.v)})});
+  $("#nl").addEventListener("click",function(e){var r=e.target.closest("[data-r]"),x=e.target.closest("[data-x]");
+    if(r){S.notes.forEach(function(n){if(String(n.id)===r.dataset.r)n.rd=true});notes()}
+    if(x){S.notes=S.notes.filter(function(n){return String(n.id)!==x.dataset.x});notes()}});
+  $("#ma").addEventListener("click",function(){S.notes.forEach(function(n){n.rd=true});notes();toast("All marked as read")});
+  $("#ca").addEventListener("click",function(){S.notes=[];notes();toast("Notifications cleared")});
+  ["#pf","#pt","#pb"].forEach(function(s){$(s).addEventListener("input",calc)});
+  $("#pc").addEventListener("click",function(){
+    if(!pt){toast("Choose a flight that is not cancelled");return}
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(pt).then(function(){toast("Message copied")},function(){toast("Copy failed")});
+    else{var t=document.createElement("textarea");t.value=pt;document.body.appendChild(t);t.select();try{document.execCommand("copy");toast("Message copied")}catch(x){toast("Copy failed")}document.body.removeChild(t)}
   });
+  $("#as").addEventListener("change",airport);
 
-  $$("[data-status]").forEach(function(button){
-    button.addEventListener("click",function(){
-      S.status=button.dataset.status;
-      render();
-    });
-  });
-
-  $("#tbody").addEventListener("click",function(event){
-    var row=event.target.closest("tr[data-id]");
-    if(row)selectFlight(Number(row.dataset.id));
-  });
-  $("#tbody").addEventListener("keydown",function(event){
-    var row=event.target.closest("tr[data-id]");
-    if(!row)return;
-    if(event.key==="Enter"||event.key===" "){
-      event.preventDefault();
-      selectFlight(Number(row.dataset.id));
-      var selected=document.querySelector('tr[data-id="'+row.dataset.id+'"]');
-      if(selected)selected.focus();
-    }else if(event.key==="ArrowDown"&&row.nextElementSibling){
-      event.preventDefault();row.nextElementSibling.focus();
-    }else if(event.key==="ArrowUp"&&row.previousElementSibling){
-      event.preventDefault();row.previousElementSibling.focus();
-    }
-  });
-
-  $$(".nav-btn").forEach(function(button){
-    button.addEventListener("click",function(){view(button.dataset.view);});
-  });
-
-  $("#notes").addEventListener("click",function(event){
-    var readButton=event.target.closest("[data-read]");
-    var deleteButton=event.target.closest("[data-del]");
-
-    if(readButton){
-      S.notes.forEach(function(n){
-        if(String(n.id)===readButton.dataset.read)n.read=true;
-      });
-      renderNotes();
-    }
-    if(deleteButton){
-      S.notes=S.notes.filter(function(n){return String(n.id)!==deleteButton.dataset.del;});
-      renderNotes();
-    }
-  });
-
-  $("#markall").addEventListener("click",function(){
-    S.notes.forEach(function(n){n.read=true;});
-    renderNotes();
-    toast("All notifications marked as read");
-  });
-  $("#clearall").addEventListener("click",function(){
-    S.notes=[];
-    renderNotes();
-    toast("Notifications cleared");
-  });
-
-  ["#p-flight","#p-travel","#p-buffer"].forEach(function(selector){
-    $(selector).addEventListener("input",calcPickup);
-    $(selector).addEventListener("change",calcPickup);
-  });
-
-  $("#p-copy").addEventListener("click",function(){
-    if(!pickupText){
-      toast("Choose a valid, non-cancelled sample flight first");
-      return;
-    }
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(pickupText).then(function(){
-        toast("Message copied");
-      }).catch(function(){
-        fallbackCopy(pickupText);
-      });
-    }else{
-      fallbackCopy(pickupText);
-    }
-  });
-
-  $("#a-sel").addEventListener("change",renderAirport);
-  $("#w-refresh").addEventListener("click",function(){
-    if(weatherLoading){
-      toast("Weather is already loading");
-      return;
-    }
-    loadWeather(true);
-  });
+  $("#col").addEventListener("click",function(){var c=shell.classList.toggle("collapsed");this.setAttribute("aria-expanded",String(!c));this.setAttribute("aria-label",c?"Expand sidebar":"Collapse sidebar")});
+  $("#mb").addEventListener("click",function(){drawer(true)});
+  $("#ov").addEventListener("click",function(){drawer(false)});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&shell.classList.contains("open")){drawer(false);$("#mb").focus()}});
+  var dlg=$("#dlg");
+  $("#help").addEventListener("click",function(){if(dlg.showModal)dlg.showModal();else dlg.setAttribute("open","")});
+  $("#dx").addEventListener("click",function(){if(dlg.close)dlg.close();else dlg.removeAttribute("open")});
 }
-function fallbackCopy(text){
-  var textarea=document.createElement("textarea");
-  textarea.value=text;
-  textarea.setAttribute("readonly","");
-  textarea.style.position="fixed";
-  textarea.style.opacity="0";
-  document.body.appendChild(textarea);
-  textarea.select();
-  try{
-    var copied=document.execCommand("copy");
-    toast(copied?"Message copied":"Copy failed. Please copy the message manually.");
-  }catch(error){
-    toast("Copy failed. Please copy the message manually.");
-  }
-  document.body.removeChild(textarea);
-}
-
 init();
 })();
 </script>
