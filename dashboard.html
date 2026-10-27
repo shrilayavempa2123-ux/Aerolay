@@ -83,6 +83,10 @@ td.fn{font-weight:800;color:var(--bl2)}.cd{font-weight:700}.ct{display:block;col
 .pill.ok{color:#166534;background:#dcfce7;border-color:#86efac}
 .pill.wn{color:#92400e;background:#fef3c7;border-color:#fcd34d}
 .pill.bad{color:#991b1b;background:#fee2e2;border-color:#fca5a5}
+.est{font-weight:800}.est.wn{color:#92400e}.est.bad{color:#991b1b}
+.rs{display:block;font-size:.78rem;color:var(--mu);margin-top:4px;max-width:230px;line-height:1.3}
+.why{border:1px solid;border-radius:12px;padding:10px 12px;margin:12px 0;font-size:.9rem}
+.why.ok{background:#dcfce7;border-color:#86efac;color:#14532d}.why.wn{background:#fef3c7;border-color:#fcd34d;color:#78350f}.why.bad{background:#fee2e2;border-color:#fca5a5;color:#7f1d1d}
 .emp{padding:36px 18px;text-align:center;color:var(--mu)}.emp[hidden]{display:none}
 .det{position:sticky;top:84px}
 .rt{display:flex;align-items:center;gap:10px;margin:12px 0}.rt .big{font-size:2rem;font-weight:800;color:var(--bl2)}.rt .ln{flex:1;border-top:3px dotted var(--bl);position:relative}
@@ -199,7 +203,7 @@ dialog ul{padding-left:20px;display:grid;gap:8px;margin:12px 0 18px}
           <div class="card tw">
             <table>
               <caption class="sr">Demo flights. Select a row for details.</caption>
-              <thead><tr><th scope="col">Flight</th><th scope="col">Airline</th><th scope="col">Origin</th><th scope="col">Destination</th><th scope="col"><button id="so" aria-label="Sort by departure, ascending">Departure ▲</button></th><th scope="col">Status</th></tr></thead>
+              <thead><tr><th scope="col">Flight</th><th scope="col">Airline</th><th scope="col">Origin</th><th scope="col">Destination</th><th scope="col"><button id="so" aria-label="Sort by departure, ascending">Departure ▲</button></th><th scope="col">Estimated</th><th scope="col">Status</th></tr></thead>
               <tbody id="tb"></tbody>
             </table>
             <div class="emp" id="em" hidden><p><strong>No flights match.</strong></p><p>Try another search or reset the filters.</p></div>
@@ -248,6 +252,7 @@ dialog ul{padding-left:20px;display:grid;gap:8px;margin:12px 0 18px}
   <ul>
     <li>Search by flight number, airline, city or airport code, or use the status cards and chips to filter.</li>
     <li>Select a flight row to open its details, then follow it to get a notification.</li>
+    <li>Delayed and cancelled flights show a demo reason and an estimated time.</li>
     <li>Use the Pickup assistant to work out when to leave for the airport.</li>
     <li>Weather &amp; airports shows live weather and simple airport walking steps.</li>
     <li>All flight data is demo data and is not live. Always confirm with your airline.</li>
@@ -261,20 +266,20 @@ dialog ul{padding-left:20px;display:grid;gap:8px;margin:12px 0 18px}
 "use strict";
 var F=[
 ["6E 2143","IndiGo","HYD","Hyderabad","DEL","Delhi","06:15","08:35","ontime",0,"B12","T1","Airbus A320neo"],
-["AI 544","Air India","DEL","Delhi","BOM","Mumbai","07:00","09:10","delayed",35,"A04","T3","Airbus A321"],
+["AI 544","Air India","DEL","Delhi","BOM","Mumbai","07:00","09:10","delayed",35,"A04","T3","Airbus A321","Late arrival of the incoming aircraft"],
 ["QP 1405","Akasa Air","BLR","Bengaluru","HYD","Hyderabad","07:40","08:55","ontime",0,"C07","T1","Boeing 737 MAX 8"],
-["SG 318","SpiceJet","RJA","Rajahmundry","HYD","Hyderabad","08:10","09:05","delayed",50,"G01","T1","Boeing 737-800"],
+["SG 318","SpiceJet","RJA","Rajahmundry","HYD","Hyderabad","08:10","09:05","delayed",50,"G01","T1","Boeing 737-800","Low visibility (fog) at Rajahmundry"],
 ["6E 6402","IndiGo","VTZ","Visakhapatnam","BLR","Bengaluru","08:45","10:40","ontime",0,"G03","T1","Airbus A320neo"],
-["AI 677","Air India","MAA","Chennai","DEL","Delhi","09:20","12:10","cancelled",0,"D02","T4","Airbus A320"],
+["AI 677","Air India","MAA","Chennai","DEL","Delhi","09:20","12:10","cancelled",0,"D02","T4","Airbus A320","Aircraft unavailable due to maintenance"],
 ["IX 1104","Air India Express","BLR","Bengaluru","COK","Kochi","09:55","11:05","ontime",0,"E15","T2","Boeing 737-800"],
 ["6E 5216","IndiGo","RJA","Rajahmundry","BLR","Bengaluru","10:30","12:10","ontime",0,"G02","T1","ATR 72-600"],
-["QP 1122","Akasa Air","BOM","Mumbai","AMD","Ahmedabad","11:05","12:10","delayed",20,"F09","T2","Boeing 737 MAX 8"],
-["AI 2651","Air India","HYD","Hyderabad","VTZ","Visakhapatnam","12:25","13:35","delayed",75,"B06","T1","Airbus A320"],
-["6E 7345","IndiGo","CCU","Kolkata","BOM","Mumbai","13:00","15:40","cancelled",0,"H03","T2","Airbus A321neo"],
+["QP 1122","Akasa Air","BOM","Mumbai","AMD","Ahmedabad","11:05","12:10","delayed",20,"F09","T2","Boeing 737 MAX 8","Air traffic congestion at Mumbai"],
+["AI 2651","Air India","HYD","Hyderabad","VTZ","Visakhapatnam","12:25","13:35","delayed",75,"B06","T1","Airbus A320","Technical check on the aircraft before departure"],
+["6E 7345","IndiGo","CCU","Kolkata","BOM","Mumbai","13:00","15:40","cancelled",0,"H03","T2","Airbus A321neo","Heavy rain and thunderstorms at Kolkata"],
 ["IX 2711","Air India Express","COK","Kochi","MAA","Chennai","13:45","14:50","ontime",0,"C02","T1","Boeing 737-800"],
 ["AI 811","Air India","BOM","Mumbai","BLR","Bengaluru","14:30","16:10","ontime",0,"F04","T2","Airbus A320neo"],
 ["6E 1893","IndiGo","BLR","Bengaluru","RJA","Rajahmundry","16:05","17:35","ontime",0,"D08","T1","ATR 72-600"]
-].map(function(a,i){return{id:i,num:a[0],air:a[1],oc:a[2],ot:a[3],dc:a[4],dt:a[5],dep:a[6],arr:a[7],st:a[8],dly:a[9],gate:a[10],term:a[11],ac:a[12]}});
+].map(function(a,i){return{id:i,num:a[0],air:a[1],oc:a[2],ot:a[3],dc:a[4],dt:a[5],dep:a[6],arr:a[7],st:a[8],dly:a[9],gate:a[10],term:a[11],ac:a[12],rs:a[13]||""}});
 var L={ontime:"On time",delayed:"Delayed",cancelled:"Cancelled"},C={ontime:"ok",delayed:"wn",cancelled:"bad"};
 var S={q:"",st:"all",al:"all",asc:true,sel:null,fol:{},notes:[]};
 var $=function(s){return document.querySelector(s)},$$=function(s){return[].slice.call(document.querySelectorAll(s))};
@@ -282,6 +287,9 @@ function mi(t){var p=t.split(":");return+p[0]*60+ +p[1]}
 function hm(x){x=(x%1440+1440)%1440;return String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0")}
 function es(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function pill(f){return '<span class="pill '+C[f.st]+'">'+L[f.st]+(f.st==="delayed"?" +"+f.dly+" min":"")+'</span>'}
+function est(f){if(f.st==="cancelled")return'<span class="est bad">No estimate</span>';var t=f.st==="delayed"?hm(mi(f.dep)+f.dly):f.dep;return'<span class="est'+(f.st==="delayed"?" wn":"")+'">'+t+'</span>'}
+function rl(f){return f.st==="ontime"?"":'<span class="rs">'+es(f.rs||"Operational reasons")+'</span>'}
+function why(f){if(f.st==="ontime")return'<p class="why ok"><strong>On schedule.</strong> No delay reported (demo).</p>';return'<p class="why '+C[f.st]+'"><strong>'+(f.st==="delayed"?"Reason for delay":"Reason for cancellation")+' (demo):</strong> '+es(f.rs||"Operational reasons")+'.</p>'}
 var tt;function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("show")},2600)}
 
 function list(){
@@ -299,7 +307,7 @@ function render(){
     +'<td class="fn" data-l="Flight">'+es(f.num)+'</td><td data-l="Airline">'+es(f.air)+'</td>'
     +'<td data-l="Origin"><span><span class="cd">'+f.oc+'</span><span class="ct">'+es(f.ot)+'</span></span></td>'
     +'<td data-l="Destination"><span><span class="cd">'+f.dc+'</span><span class="ct">'+es(f.dt)+'</span></span></td>'
-    +'<td data-l="Departure">'+f.dep+'</td><td data-l="Status">'+pill(f)+'</td></tr>';
+    +'<td data-l="Departure">'+f.dep+'</td><td data-l="Estimated">'+est(f)+'</td><td data-l="Status"><div>'+pill(f)+rl(f)+'</div></td></tr>';
   }).join("");
   $("#em").hidden=r.length>0;
   $("#cnt").textContent="Showing "+r.length+" of "+F.length+" demo flights";
@@ -313,17 +321,17 @@ function details(){
   var d=$("#det");
   if(S.sel===null){d.innerHTML='<h2>Flight details</h2><p class="mu">Select a flight to see its gate, terminal, aircraft and timings.</p>';return}
   var f=F[S.sel],c=f.st==="cancelled",nd=f.st==="delayed"?hm(mi(f.dep)+f.dly):f.dep,na=f.st==="delayed"?hm(mi(f.arr)+f.dly):f.arr,du=mi(f.arr)-mi(f.dep),fo=!!S.fol[f.id];
-  d.innerHTML='<div class="fade"><h2>'+es(f.num)+' · '+es(f.air)+'</h2>'+pill(f)
+  d.innerHTML='<div class="fade"><h2>'+es(f.num)+' · '+es(f.air)+'</h2>'+pill(f)+why(f)
   +'<div class="rt"><div><div class="big">'+f.oc+'</div><span class="ct">'+es(f.ot)+'</span></div><div class="ln"></div><div style="text-align:right"><div class="big">'+f.dc+'</div><span class="ct">'+es(f.dt)+'</span></div></div>'
-  +'<dl class="dl"><div><dt>Scheduled departure</dt><dd>'+f.dep+'</dd></div><div><dt>Expected departure</dt><dd>'+(c?"Cancelled":nd)+'</dd></div>'
-  +'<div><dt>Scheduled arrival</dt><dd>'+f.arr+'</dd></div><div><dt>Expected arrival</dt><dd>'+(c?"Cancelled":na)+'</dd></div>'
+  +'<dl class="dl"><div><dt>Scheduled departure</dt><dd>'+f.dep+'</dd></div><div><dt>Estimated departure</dt><dd>'+(c?"No estimate":nd)+'</dd></div>'
+  +'<div><dt>Scheduled arrival</dt><dd>'+f.arr+'</dd></div><div><dt>Estimated arrival</dt><dd>'+(c?"No estimate":na)+'</dd></div>'
   +'<div><dt>Gate</dt><dd>'+f.gate+'</dd></div><div><dt>Terminal</dt><dd>'+f.term+'</dd></div>'
-  +'<div><dt>Aircraft</dt><dd>'+es(f.ac)+'</dd></div><div><dt>Flight time</dt><dd>'+Math.floor(du/60)+"h "+du%60+'m</dd></div></dl>'
+  +'<div><dt>Aircraft</dt><dd>'+es(f.ac)+'</dd></div><div><dt>Flight time</dt><dd>'+Math.floor(du/60)+"h "+du%60+'m</dd></div><div style="grid-column:1/-1"><dt>Delay</dt><dd>'+(f.st==="delayed"?"+"+f.dly+" minutes":c?"Flight cancelled":"No delay")+'</dd></div></dl>'
   +'<div class="acts"><button class="btn pri" id="dfo" aria-pressed="'+fo+'">'+(fo?"Following ✓":"Follow this flight")+'</button><button class="btn" id="dpk">Plan pickup</button></div>'
   +'<p class="mu sm" style="margin-top:12px">Demo data. Not a live flight record.</p></div>';
   $("#dfo").onclick=function(){
     if(S.fol[f.id]){delete S.fol[f.id];toast("Stopped following "+f.num)}
-    else{S.fol[f.id]=1;addNote("info","You are now following "+f.num+" ("+f.oc+" to "+f.dc+"). Status: "+L[f.st]+".");toast("Following "+f.num)}
+    else{S.fol[f.id]=1;addNote("info","You are now following "+f.num+" ("+f.oc+" to "+f.dc+"). Status: "+L[f.st]+(f.st==="ontime"?"":" ("+f.rs+")")+".");toast("Following "+f.num)}
     details();
   };
   $("#dpk").onclick=function(){$("#pf").value=f.id;view("pickup")};
@@ -332,8 +340,8 @@ function pick(id){S.sel=id;render();if(window.innerWidth<1024)$("#det").scrollIn
 
 function addNote(t,x){S.notes.unshift({id:Date.now()+Math.random(),t:t,x:x,time:"Just now",rd:false});notes()}
 function seed(){F.forEach(function(f){
-  if(f.st==="delayed")S.notes.push({id:"d"+f.id,t:"warn",x:f.num+" ("+f.oc+" to "+f.dc+") is delayed by "+f.dly+" minutes. New departure "+hm(mi(f.dep)+f.dly)+".",time:"Demo alert",rd:false});
-  if(f.st==="cancelled")S.notes.push({id:"c"+f.id,t:"bad",x:f.num+" ("+f.oc+" to "+f.dc+") is cancelled. Contact the airline to rebook.",time:"Demo alert",rd:false});
+  if(f.st==="delayed")S.notes.push({id:"d"+f.id,t:"warn",x:f.num+" ("+f.oc+" to "+f.dc+") is delayed by "+f.dly+" minutes. New departure "+hm(mi(f.dep)+f.dly)+". Reason: "+f.rs+".",time:"Demo alert",rd:false});
+  if(f.st==="cancelled")S.notes.push({id:"c"+f.id,t:"bad",x:f.num+" ("+f.oc+" to "+f.dc+") is cancelled. Reason: "+f.rs+". Contact the airline to rebook.",time:"Demo alert",rd:false});
 })}
 function notes(){
   var n=S.notes,u=n.filter(function(x){return!x.rd}).length,ic={warn:"!",bad:"✕",info:"i"};
@@ -346,10 +354,10 @@ function notes(){
 var pt="";
 function calc(){
   var f=F[+$("#pf").value],el=$("#pr"),tr=+$("#pt").value||0,bf=+$("#pb").value||0;
-  if(f.st==="cancelled"){el.className="res bad";el.innerHTML='<p><strong>'+f.num+' is cancelled (demo).</strong></p><p>Check with the passenger and the airline first.</p>';pt="";return}
+  if(f.st==="cancelled"){el.className="res bad";el.innerHTML='<p><strong>'+f.num+' is cancelled (demo).</strong></p><p>Reason: '+es(f.rs)+'.</p><p>Check with the passenger and the airline first.</p>';pt="";return}
   var la=mi(f.arr)+(f.st==="delayed"?f.dly:0),rd=la+bf,lv=rd-tr;
   el.className="res";
-  el.innerHTML='<p>Leave by</p><p class="t">'+hm(lv)+'</p><p>Expected landing '+hm(la)+' at '+f.dc+' ('+es(f.dt)+'), Terminal '+f.term+'. Passenger ready around '+hm(rd)+'.'+(f.st==="delayed"?" Includes a "+f.dly+" minute delay.":"")+'</p>';
+  el.innerHTML='<p>Leave by</p><p class="t">'+hm(lv)+'</p><p>Expected landing '+hm(la)+' at '+f.dc+' ('+es(f.dt)+'), Terminal '+f.term+'. Passenger ready around '+hm(rd)+'.'+(f.st==="delayed"?" Includes a "+f.dly+" minute delay ("+es(f.rs)+").":"")+'</p>';
   pt="Hi! Your flight "+f.num+" is expected to land at "+hm(la)+" (demo times). I will be at Terminal "+f.term+" around "+hm(rd)+". Message me when you land.";
 }
 
@@ -368,7 +376,7 @@ function airport(){
   var k=$("#as").value,a=AP[k];
   var rel=F.filter(function(f){return f.oc===k||f.dc===k}).sort(function(x,y){return mi(x.dep)-mi(y.dep)});
   $("#a1").innerHTML='<h2>'+k+' · '+es(a[0])+'</h2><div class="wx" id="wx"><span class="mu">Loading weather…</span></div>'
-   +'<h2>Demo flights here</h2><ul class="pl">'+(rel.map(function(f){return '<li><strong>'+es(f.num)+'</strong> '+(f.oc===k?'departs to '+f.dc+' at '+f.dep:'arrives from '+f.oc+' at '+f.arr)+'<br><small class="mu">Terminal '+f.term+', Gate '+f.gate+' · '+L[f.st]+(f.st==="delayed"?" +"+f.dly+" min":"")+'</small></li>'}).join("")||"<li>No demo flights here.</li>")+'</ul>'
+   +'<h2>Demo flights here</h2><ul class="pl">'+(rel.map(function(f){return '<li><strong>'+es(f.num)+'</strong> '+(f.oc===k?'departs to '+f.dc+' at '+f.dep:'arrives from '+f.oc+' at '+f.arr)+'<br><small class="mu">Terminal '+f.term+', Gate '+f.gate+' · '+L[f.st]+(f.st==="delayed"?" +"+f.dly+" min, estimated "+hm(mi(f.oc===k?f.dep:f.arr)+f.dly):"")+(f.st==="cancelled"?" ("+es(f.rs)+")":"")+'</small></li>'}).join("")||"<li>No demo flights here.</li>")+'</ul>'
    +'<p class="mu sm" style="margin-top:10px">Gates and terminals are demo values.</p>';
   $("#a2").innerHTML='<h2>Departing</h2><ol class="st"><li>Go to the terminal shown for your flight and find your airline on the departures screen.</li><li>Check in or drop bags at the airline counter if needed.</li><li>Pass security screening.</li><li>Check the screens for your gate and walk there. Confirm boarding times with your airline.</li></ol>'
    +'<h2>Arriving</h2><ol class="st"><li>Follow signs for Arrivals and Baggage Claim.</li><li>Check the baggage screens for your belt number.</li><li>Exit through customs if required, then follow signs to taxis or the pickup point.</li></ol>'
